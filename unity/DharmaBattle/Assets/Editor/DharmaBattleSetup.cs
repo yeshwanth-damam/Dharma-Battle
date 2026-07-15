@@ -78,6 +78,24 @@ namespace DharmaBattle.Editor
             EditorSceneManager.OpenScene(assetsPath);
         }
 
+        [MenuItem("Dharma Battle/5. Save Current Scene As Battle", false, 4)]
+        public static void SaveCurrentAsBattle()
+        {
+            EnsureFolders();
+            var path = SceneDir + "/Battle.unity";
+            var scene = EditorSceneManager.GetActiveScene();
+            if (!scene.isDirty && SceneFileExists(path))
+            {
+                EditorUtility.DisplayDialog("Dharma Battle", $"Battle scene already saved at\n{path}", "OK");
+                return;
+            }
+            EditorSceneManager.SaveScene(scene, path);
+            SetBuildScenes();
+            AssetDatabase.SaveAssets();
+            EditorUtility.DisplayDialog("Dharma Battle",
+                $"Saved Battle scene to:\n{path}\n\nPress Play on this scene.", "OK");
+        }
+
         static bool SceneFileExists(string assetsPath) =>
             File.Exists(Path.GetFullPath(Path.Combine(Application.dataPath, "..", assetsPath)));
 

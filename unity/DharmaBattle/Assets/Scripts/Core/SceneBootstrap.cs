@@ -1,5 +1,6 @@
 using System.Collections;
 using System.IO;
+using DharmaBattle.Combat;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -14,14 +15,16 @@ namespace DharmaBattle.Core
 
         IEnumerator Start()
         {
+            // Already in battle (e.g. opened Battle scene directly).
+            if (SceneManager.GetActiveScene().name == battleSceneName
+                || FindAnyObjectByType<BattleManager>() != null)
+                yield break;
+
             while (GameSession.Instance == null)
                 yield return null;
 
             while (GameSession.Instance.Player == null)
                 yield return null;
-
-            if (SceneManager.GetActiveScene().name == battleSceneName)
-                yield break;
 
             if (Application.CanStreamedLevelBeLoaded(battleSceneName))
             {
@@ -30,20 +33,30 @@ namespace DharmaBattle.Core
             }
 
 #if UNITY_EDITOR
-            if (!File.Exists(ToFullPath(BattleSceneAssetPath)))
+            if (!BattleSceneExists())
             {
                 Debug.LogError(
-                    $"Battle scene not found at {BattleSceneAssetPath}. " +
-                    "Run Dharma Battle → 1. Setup Project, or open Battle scene directly.");
+                    $"Battle scene not found at {BattleSceneAssetPath}.\n" +
+                    "Fix: Dharma Battle → 1. Setup Project\n" +
+                    "Or: open Battle scene → File → Save → Assets/DharmaBattle/Scenes/Battle.unity\n" +
+                    "Or: Dharma Battle → 4. Open Battle Scene (Play Here) — skip Bootstrap.");
                 yield break;
             }
 
-            Debug.LogWarning($"Scene '{battleSceneName}' not in Build Profile — loading by full path (Editor).");
             var parameters = new LoadSceneParameters(LoadSceneMode.Single);
             UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode(
                 ToFullPath(BattleSceneAssetPath), parameters);
 #else
             Debug.LogError($"Scene '{battleSceneName}' is not in the build. Run Dharma Battle → Fix Build Scenes.");
+#endif
+        }
+
+        static bool BattleSceneExists()
+        {
+#if UNITY_EDITOR
+            return UnityEditor.AssetDatabase.LoadAssetAtPath<Object>(BattleSceneAssetPath) != null;
+#else
+            return File.Exists(ToFullPath(BattleSceneAssetPath));
 #endif
         }
 
