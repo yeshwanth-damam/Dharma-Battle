@@ -17,9 +17,10 @@ export const COLORS = {
 };
 
 export const FONTS: Record<string, TextStyle> = {
-  h1: { fontSize: 40, fontWeight: "900", letterSpacing: 3, color: COLORS.gold },
-  h2: { fontSize: 28, fontWeight: "800", letterSpacing: 2, color: COLORS.text },
-  h3: { fontSize: 20, fontWeight: "700", letterSpacing: 1.5, color: COLORS.text },
-  body: { fontSize: 15, color: COLORS.text },
-  small: { fontSize: 12, letterSpacing: 1, textTransform: "uppercase", color: COLORS.textDim, fontWeight: "700" },
+  h1: { fontSize: 40, fontFamily: "Cinzel-Black", letterSpacing: 3, color: COLORS.gold },
+  h2: { fontSize: 28, fontFamily: "Cinzel-Bold", letterSpacing: 2, color: COLORS.text },
+  h3: { fontSize: 20, fontFamily: "Cinzel-Bold", letterSpacing: 1.5, color: COLORS.text },
+  body: { fontSize: 15, fontFamily: "Exo2-Regular", color: COLORS.text },
+  bodyBold: { fontSize: 15, fontFamily: "Exo2-Bold", color: COLORS.text },
+  small: { fontSize: 12, fontFamily: "Exo2-Bold", letterSpacing: 1, textTransform: "uppercase", color: COLORS.textDim },
 };

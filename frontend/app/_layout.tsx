@@ -5,7 +5,7 @@ import { LogBox, StatusBar } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import { useIconFonts } from "@/src/hooks/use-icon-fonts";
+import { useGameFonts } from "@/src/hooks/use-game-fonts";
 import { StoreProvider } from "@/src/game/store";
 
 LogBox.ignoreAllLogs(true);
@@ -17,7 +17,7 @@ LogBox.ignoreAllLogs(true);
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [loaded, error] = useIconFonts();
+  const [loaded, error] = useGameFonts();
 
   useEffect(() => {
     if (loaded || error) {

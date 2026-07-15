@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { storage } from "@/src/utils/storage";
-import { api, Player, GameConfig } from "./api";
+import { api, Player, GameConfig, TOKEN_STORAGE_KEY } from "./api";
+import { soundService } from "./sound";
 
 type Ctx = {
   player: Player | null;
@@ -12,10 +13,11 @@ type Ctx = {
   createPlayer: (name: string) => Promise<Player>;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
+  saveSession: (token: string) => Promise<void>;
 };
 
 const StoreContext = createContext<Ctx | null>(null);
-const KEY = "dharma_player_id";
+const PLAYER_KEY = "dharma_player_id";
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [player, setPlayer] = useState<Player | null>(null);
@@ -26,15 +28,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const boot = useCallback(async () => {
     setLoading(true);
     try {
+      await soundService.init();
       const cfg = await api.config();
       setConfig(cfg);
-      const savedId = await storage.getItem<string>(KEY, "");
+
+      // Try authenticated Google session first
+      const token = await storage.secureGet<string>(TOKEN_STORAGE_KEY, "");
+      if (token) {
+        try {
+          const me = await api.me();
+          setPlayer(me);
+          await storage.setItem(PLAYER_KEY, me.id);
+          return;
+        } catch {
+          await storage.secureRemove(TOKEN_STORAGE_KEY);
+        }
+      }
+
+      const savedId = await storage.getItem<string>(PLAYER_KEY, "");
       if (savedId) {
         try {
           const p = await api.getPlayer(savedId);
           setPlayer(p);
         } catch {
-          await storage.removeItem(KEY);
+          await storage.removeItem(PLAYER_KEY);
         }
       }
     } catch (e) {
@@ -44,31 +61,39 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  useEffect(() => {
-    boot();
-  }, [boot]);
+  useEffect(() => { boot(); }, [boot]);
 
   const createPlayer = async (name: string) => {
     const p = await api.createPlayer(name);
-    await storage.setItem(KEY, p.id);
+    await storage.setItem(PLAYER_KEY, p.id);
     setPlayer(p);
     return p;
   };
 
   const refresh = async () => {
     if (!player) return;
-    const p = await api.getPlayer(player.id);
-    setPlayer(p);
+    try {
+      const p = await api.getPlayer(player.id);
+      setPlayer(p);
+    } catch {
+      // ignore
+    }
   };
 
   const logout = async () => {
-    await storage.removeItem(KEY);
+    try { await api.logout(); } catch { /* ignore */ }
+    await storage.removeItem(PLAYER_KEY);
+    await storage.secureRemove(TOKEN_STORAGE_KEY);
     setPlayer(null);
+  };
+
+  const saveSession = async (token: string) => {
+    await storage.secureSet(TOKEN_STORAGE_KEY, token);
   };
 
   return (
     <StoreContext.Provider
-      value={{ player, config, selectedMap, loading, setSelectedMap, setPlayer, createPlayer, refresh, logout }}
+      value={{ player, config, selectedMap, loading, setSelectedMap, setPlayer, createPlayer, refresh, logout, saveSession }}
     >
       {children}
     </StoreContext.Provider>
