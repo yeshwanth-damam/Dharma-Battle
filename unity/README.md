@@ -114,15 +114,36 @@ Requires **macOS + Xcode**:
 2. Bundle ID: `com.emergent.dharmacombat.xwhm9b`
 3. Build → open Xcode → Archive → Distribute
 
-## Multiplayer path (Unity)
+## Troubleshooting
 
-`com.unity.netcode.gameobjects` is included in `Packages/manifest.json`.
+### Safe Mode / red compile errors on open
 
-**Recommended v1:** 2–4 player co-op wave survival
-1. Extract wave spawning to server-authoritative `NetworkBattleManager`
-2. Headless Linux dedicated server build
-3. Clients send input only; server simulates enemies
-4. On match end, host calls existing `POST /api/match/complete`
+Usually caused by a corrupted `Library/` cache or the old Netcode package pulling invalid modules.
+
+1. **Close Unity completely**
+2. Delete these folders inside `unity/DharmaBattle/`:
+   - `Library/`
+   - `Temp/`
+   - `obj/`
+3. If present, delete `Assets/DefaultNetworkPrefabs` (leftover from Netcode — not used in Phase 1)
+4. Pull latest repo (manifest fix removes Netcode until multiplayer phase)
+5. Reopen the project in Unity Hub
+
+### "Dharma Battle" menu missing
+
+Wait for script compile to finish (spinner bottom-right). Check Console for errors.
+
+### Battle works but no cloud save
+
+Start FastAPI backend and set ApiClient Base Url. Offline mode is intentional when API is unreachable.
+
+---
+
+## Multiplayer path (Unity — later phase)
+
+Netcode for GameObjects was **removed from the default manifest** because it caused compile errors before multiplayer is implemented. When you reach Phase 4, add via Package Manager:
+
+`com.unity.netcode.gameobjects`
 
 See `Assets/Scripts/Multiplayer/MultiplayerNotes.cs`.
 

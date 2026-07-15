@@ -1,9 +1,8 @@
 // Placeholder for Unity Netcode for GameObjects integration.
 // Multiplayer v1: dedicated server build + client builds, 2-4 player co-op waves.
 //
-// Recommended packages (already in Packages/manifest.json):
-//   com.unity.netcode.gameobjects
-//
+// Netcode for GameObjects — add in Phase 4 via Package Manager when implementing multiplayer.
+// Removed from default manifest.json because it pulled invalid module deps on Unity 6.0.79f1.
 // Architecture:
 //   1. Host or dedicated Linux headless server runs wave logic (BattleManager authoritative).
 //   2. Clients send movement input via ServerRpc; server broadcasts enemy positions.
