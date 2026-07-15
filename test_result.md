@@ -101,3 +101,85 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Implement incremental co-op multiplayer via FastAPI WebSocket room server on existing Expo + FastAPI Dharma Battle codebase (not Unreal rewrite)."
+
+backend:
+  - task: "Authoritative co-op room server (REST + WebSocket)"
+    implemented: true
+    working: true
+    file: "backend/multiplayer.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Room create/join/list + WS ready/start/input/snapshot/match_end. pytest tests/test_multiplayer.py 4/4 passed against local uvicorn:8001."
+
+  - task: "Wire MP router + reward callback into server.py"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "API version 2.1 multiplayer:true; co-op rewards reuse solo economy."
+
+frontend:
+  - task: "Co-op lobby UI (create/join/ready/start)"
+    implemented: true
+    working: true
+    file: "frontend/app/multiplayer.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented; needs browser/UI smoke for create/join flow."
+
+  - task: "Thin-client MP battle renderer"
+    implemented: true
+    working: true
+    file: "frontend/app/mp-battle.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Renders server snapshots; joystick/ability/fire send inputs. Needs UI verification with 2 clients."
+
+  - task: "Lobby CO-OP entry button"
+    implemented: true
+    working: true
+    file: "frontend/app/lobby.tsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "CO-OP MULTIPLAYER button routes to /multiplayer."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Co-op lobby UI (create/join/ready/start)"
+    - "Thin-client MP battle renderer"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Backend MP REST+WS verified via pytest. Frontend screens added; please smoke-test lobby → create room → start → battle HUD if UI runner available. Solo battle path unchanged."

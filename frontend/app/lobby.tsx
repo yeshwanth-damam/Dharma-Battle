@@ -112,6 +112,16 @@ export default function Lobby() {
             </LinearGradient>
           </TouchableOpacity>
 
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.coop}
+            onPress={() => router.push("/multiplayer")}
+            testID="lobby-coop-btn"
+          >
+            <FontAwesome5 name="users" size={16} color={COLORS.gold} />
+            <Text style={styles.coopTxt}>CO-OP MULTIPLAYER</Text>
+          </TouchableOpacity>
+
           {/* Quick actions */}
           <View style={styles.quickRow}>
             <QuickBtn icon="store" label="Shop" onPress={() => router.push("/shop")} testID="lobby-shop-btn" />
@@ -194,6 +204,15 @@ const styles = StyleSheet.create({
   },
   playGrad: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 20, gap: 12 },
   playTxt: { color: COLORS.text, fontWeight: "900", fontSize: 20, letterSpacing: 2 },
+
+  coop: {
+    marginHorizontal: 20, marginTop: 12, borderRadius: 28,
+    borderWidth: 1, borderColor: COLORS.gold,
+    backgroundColor: "rgba(255, 215, 0, 0.08)",
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    paddingVertical: 14, gap: 10,
+  },
+  coopTxt: { color: COLORS.gold, fontWeight: "800", fontSize: 14, letterSpacing: 2 },
 
   quickRow: { flexDirection: "row", marginTop: 20, paddingHorizontal: 20, gap: 12 },
   qb: {

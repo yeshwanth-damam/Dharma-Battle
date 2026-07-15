@@ -16,6 +16,8 @@ from emergentintegrations.payments.stripe.checkout import (
     CheckoutSessionRequest,
 )
 
+from multiplayer import manager as mp_manager, mp_router
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
 
@@ -135,7 +137,7 @@ async def _fetch(player_id: str) -> dict:
 # ---------- Routes ----------
 @api_router.get("/")
 async def root():
-    return {"message": "Dharma Battle API is live", "version": "2.0"}
+    return {"message": "Dharma Battle API is live", "version": "2.1", "multiplayer": True}
 
 
 @api_router.get("/game/config")
@@ -455,6 +457,7 @@ async def auth_logout(authorization: Optional[str] = Header(None)):
 
 
 app.include_router(api_router)
+app.include_router(mp_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -468,8 +471,36 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 
+async def _mp_reward(player_id: str, map_id: str, kills: int, survived_seconds: int, victory: bool):
+    """Grant co-op match rewards using the same economy as solo /match/complete."""
+    doc = await db.players.find_one({"id": player_id}, {"_id": 0})
+    if not doc:
+        return
+    coin_reward = kills * 10 + (50 if victory else 10)
+    xp_reward = kills * 15 + (100 if victory else 25)
+    score = kills * 100 + survived_seconds * 2 + (500 if victory else 0)
+
+    new_xp = doc.get("xp", 0) + xp_reward
+    new_level = doc.get("level", 1)
+    while new_xp >= xp_for_next(new_level):
+        new_xp -= xp_for_next(new_level)
+        new_level += 1
+
+    updates = {
+        "coins": doc.get("coins", 0) + coin_reward,
+        "xp": new_xp,
+        "level": new_level,
+        "kills": doc.get("kills", 0) + kills,
+        "matches": doc.get("matches", 0) + 1,
+        "wins": doc.get("wins", 0) + (1 if victory else 0),
+        "best_score": max(doc.get("best_score", 0), score),
+    }
+    await db.players.update_one({"id": player_id}, {"$set": updates})
+
+
 @app.on_event("startup")
 async def _init_indexes():
+    mp_manager.configure(HEROES, WEAPONS, MAPS, reward_cb=_mp_reward)
     try:
         await db.players.create_index("id", unique=True)
         await db.players.create_index("email", sparse=True)
