@@ -101,3 +101,48 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Add real-time multiplayer as an incremental evolution of the existing Expo + FastAPI codebase: an authoritative game server (FastAPI WebSocket room server) next to the existing backend."
+
+backend:
+  - task: "Authoritative squad co-op WebSocket battle server (rooms, matchmaking, 20Hz sim, rewards)"
+    implemented: true
+    working: true
+    file: "backend/multiplayer.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "WS at /api/ws/battle + GET /api/multiplayer/status. 19 pytest cases (12 pure-sim, 7 live WebSocket incl. full solo match with persisted rewards) all pass. Two-player e2e script verified lobby-by-code, synchronized snapshots, per-player rewards, Mongo persistence."
+
+frontend:
+  - task: "Squad co-op screen (menu/lobby/battle/results) + BattleSocket client + lobby entry point"
+    implemented: true
+    working: "NA"
+    file: "frontend/app/squad.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "tsc --noEmit and expo lint clean. UI flow not yet exercised on a device/browser; needs UI testing."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Squad co-op screen (menu/lobby/battle/results) + BattleSocket client + lobby entry point"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: "Multiplayer added as squad co-op (up to 4 players) via authoritative FastAPI WebSocket server; single-player untouched. Existing shop tests updated: soft-currency coin packs were already replaced by Stripe checkout in server.py, so tests now fund players via match rewards."

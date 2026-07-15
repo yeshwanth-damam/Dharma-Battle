@@ -1,7 +1,7 @@
 # Dharma Battle — Product Requirements Document
 
 ## Product
-**Dharma Battle** — a 2D top-down single-player arena shooter mobile game inspired by Indian mythology, built with Expo React Native + FastAPI + MongoDB. PUBG-like arcade action, no online multiplayer.
+**Dharma Battle** — a 2D top-down arena shooter mobile game inspired by Indian mythology, built with Expo React Native + FastAPI + MongoDB. PUBG-like arcade action. Single-player wave battles plus real-time **Squad Co-op** multiplayer (up to 4 players, authoritative WebSocket server).
 
 ## Target Users
 Casual mobile gamers, Indian mythology enthusiasts, arcade shooter fans. Play Store + App Store distribution.
@@ -21,6 +21,7 @@ Casual mobile gamers, Indian mythology enthusiasts, arcade shooter fans. Play St
 - **Shop**: 3 tabs — Coins (mock IAP packs 500/1500/5000), Heroes (unlock with coins), Astras (unlock with coins).
 - **Leaderboard**: podium top-3 + full ranking by best score.
 - **Profile**: hero portrait, level/XP, kills, wins, winrate, best score, logout.
+- **Squad Co-op (real-time multiplayer)**: quick match or private rooms with 6-char join codes, up to 4 players. Authoritative FastAPI WebSocket server simulates the battle at 20 Hz (clients send inputs only — cheat-resistant). Enemy waves scale with squad size, enemies chase the nearest living player, fallen warriors spectate while the squad fights on. Per-player rewards (coins/XP/score) granted server-side; squad matches logged to `squad_matches`.
 
 ## Backend API (`/api/*`)
 - `GET /game/config` — heroes/weapons/maps/coin_packs
@@ -30,6 +31,8 @@ Casual mobile gamers, Indian mythology enthusiasts, arcade shooter fans. Play St
 - `POST /match/complete` — submit match result, awards coins/XP, updates level & best score
 - `POST /shop/purchase` — buy hero/weapon/coin pack
 - `GET /leaderboard` — top players by best score
+- `WS /ws/battle` — real-time squad co-op battle socket (join/lobby/input/state/end protocol)
+- `GET /multiplayer/status` — live room/player counts
 
 ## Monetization Path
 - **Now (MVP)**: mock IAP coin packs functional; heroes/weapons buyable with coins.

@@ -24,6 +24,19 @@ def player(s):
     return p
 
 
+def fund_player(s, player_id: str, target_coins: int):
+    """Earn coins via match rewards (coin packs now require real Stripe checkout)."""
+    while True:
+        r = s.post(
+            f"{API}/match/complete",
+            json={"player_id": player_id, "map_id": "kurukshetra", "kills": 20, "survived_seconds": 10, "victory": True},
+            timeout=10,
+        )
+        assert r.status_code == 200, r.text
+        if r.json()["coins"] >= target_coins:
+            return r.json()
+
+
 # ---------- Health / Config ----------
 class TestConfig:
     def test_root(self, s):
@@ -138,15 +151,12 @@ class TestMatch:
 
 # ---------- Shop ----------
 class TestShop:
-    def test_buy_coin_pack(self, s):
+    def test_coin_pack_requires_stripe(self, s):
+        # Soft-currency coin pack purchase was replaced by real Stripe checkout
         p = s.post(f"{API}/player", json={"name": "TEST_ShopCoin"}, timeout=10).json()
         r = s.post(f"{API}/shop/purchase", json={"player_id": p["id"], "item_type": "coins", "item_id": "pack_small"}, timeout=10)
-        assert r.status_code == 200
-        assert r.json()["coins"] == p["coins"] + 500
-
-    def test_unknown_coin_pack(self, s, player):
-        r = s.post(f"{API}/shop/purchase", json={"player_id": player["id"], "item_type": "coins", "item_id": "no_such_pack"}, timeout=10)
         assert r.status_code == 400
+        assert "stripe" in r.text.lower()
 
     def test_buy_hero_insufficient_coins(self, s):
         p = s.post(f"{API}/player", json={"name": "TEST_Poor"}, timeout=10).json()
@@ -157,21 +167,20 @@ class TestShop:
 
     def test_buy_hero_and_double_purchase(self, s):
         p = s.post(f"{API}/player", json={"name": "TEST_HeroBuy"}, timeout=10).json()
-        # Give player enough coins
-        s.post(f"{API}/shop/purchase", json={"player_id": p["id"], "item_type": "coins", "item_id": "pack_medium"}, timeout=10)
+        funded = fund_player(s, p["id"], 500)
         # Buy bhima (500)
         r = s.post(f"{API}/shop/purchase", json={"player_id": p["id"], "item_type": "hero", "item_id": "bhima"}, timeout=10)
         assert r.status_code == 200
         pd = r.json()
         assert "bhima" in pd["owned_heroes"]
-        assert pd["coins"] == 250 + 1500 - 500  # 1250
+        assert pd["coins"] == funded["coins"] - 500
         # Double purchase blocked
         r2 = s.post(f"{API}/shop/purchase", json={"player_id": p["id"], "item_type": "hero", "item_id": "bhima"}, timeout=10)
         assert r2.status_code == 400
 
     def test_buy_weapon(self, s):
         p = s.post(f"{API}/player", json={"name": "TEST_WpnBuy"}, timeout=10).json()
-        s.post(f"{API}/shop/purchase", json={"player_id": p["id"], "item_type": "coins", "item_id": "pack_small"}, timeout=10)
+        fund_player(s, p["id"], 400)
         # vajra costs 400
         r = s.post(f"{API}/shop/purchase", json={"player_id": p["id"], "item_type": "weapon", "item_id": "vajra"}, timeout=10)
         assert r.status_code == 200
@@ -180,7 +189,7 @@ class TestShop:
     def test_select_after_purchase(self, s):
         # Full flow: buy hero, then select it
         p = s.post(f"{API}/player", json={"name": "TEST_SelectFlow"}, timeout=10).json()
-        s.post(f"{API}/shop/purchase", json={"player_id": p["id"], "item_type": "coins", "item_id": "pack_medium"}, timeout=10)
+        fund_player(s, p["id"], 500)
         s.post(f"{API}/shop/purchase", json={"player_id": p["id"], "item_type": "hero", "item_id": "bhima"}, timeout=10)
         r = s.post(f"{API}/player/select", json={"player_id": p["id"], "hero_id": "bhima"}, timeout=10)
         assert r.status_code == 200
