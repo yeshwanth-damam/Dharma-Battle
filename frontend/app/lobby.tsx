@@ -112,6 +112,20 @@ export default function Lobby() {
             </LinearGradient>
           </TouchableOpacity>
 
+          {/* Co-op multiplayer */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.coop}
+            onPress={() => router.push("/coop")}
+            testID="lobby-coop-btn"
+          >
+            <FontAwesome5 name="users" size={18} color={COLORS.gold} />
+            <Text style={styles.coopTxt}>CO-OP BATTLE</Text>
+            <View style={styles.liveBadge}>
+              <Text style={styles.liveTxt}>LIVE</Text>
+            </View>
+          </TouchableOpacity>
+
           {/* Quick actions */}
           <View style={styles.quickRow}>
             <QuickBtn icon="store" label="Shop" onPress={() => router.push("/shop")} testID="lobby-shop-btn" />
@@ -194,6 +208,15 @@ const styles = StyleSheet.create({
   },
   playGrad: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 20, gap: 12 },
   playTxt: { color: COLORS.text, fontWeight: "900", fontSize: 20, letterSpacing: 2 },
+
+  coop: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10,
+    marginHorizontal: 20, marginTop: 12, paddingVertical: 15, borderRadius: 30,
+    backgroundColor: COLORS.bg2, borderWidth: 2, borderColor: COLORS.gold,
+  },
+  coopTxt: { color: COLORS.gold, fontFamily: "Cinzel-Bold", fontSize: 16, letterSpacing: 2 },
+  liveBadge: { backgroundColor: COLORS.danger, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 },
+  liveTxt: { color: "#fff", fontSize: 9, fontWeight: "900", letterSpacing: 1 },
 
   quickRow: { flexDirection: "row", marginTop: 20, paddingHorizontal: 20, gap: 12 },
   qb: {

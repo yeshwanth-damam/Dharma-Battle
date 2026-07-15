@@ -101,3 +101,87 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: >
+  Evolve the single-player wave shooter into real-time multiplayer by adding an
+  authoritative game server next to the existing FastAPI backend (as recommended
+  in the strategic plan), rather than rewriting in a native engine. Implemented
+  drop-in PvE co-op: several warriors fight the same enemy waves together, with
+  the server owning all game state.
+
+backend:
+  - task: "Authoritative real-time co-op WebSocket server"
+    implemented: true
+    working: true
+    file: "backend/realtime.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: true
+        -agent: "main"
+        -comment: >
+          New authoritative room server running a fixed 20Hz simulation.
+          WebSocket endpoint /api/ws/battle. Handles matchmaking (drop-in join
+          of an open room per map, max 4 players), server-side movement, auto/aim
+          firing with weapon cooldowns, all 4 hero abilities, enemy waves, bullets,
+          drops, revive-on-wave, and victory/defeat resolution. Match rewards are
+          persisted authoritatively via server.apply_match_rewards. Verified with
+          18 unit + WebSocket integration tests and a live 2-client sync test.
+  - task: "Shared game config extraction"
+    implemented: true
+    working: true
+    file: "backend/game_config.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        -working: true
+        -agent: "main"
+        -comment: >
+          Heroes/weapons/maps/catalog moved to game_config.py (SSOT) so the REST
+          API and realtime server share one source. server.py refactored to import
+          from it; existing REST tests still pass (no behavior change).
+
+frontend:
+  - task: "Real-time client + co-op battle screen"
+    implemented: true
+    working: "NA"
+    file: "frontend/app/coop.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: >
+          Added src/game/realtime.ts (typed WebSocket client + arena->screen
+          scaling) and app/coop.tsx which connects, streams joystick/ability input
+          and renders the server's authoritative snapshots (self + allies, enemies,
+          bullets, drops, kill feed, wave/HP/players HUD). Lobby has a new
+          "CO-OP BATTLE" entry (testID lobby-coop-btn). Passes tsc + expo lint.
+          Needs on-device/browser UI verification (not runnable in this sandbox).
+
+metadata:
+  created_by: "main_agent"
+  version: "1.1"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Real-time client + co-op battle screen"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    -agent: "main"
+    -message: >
+      Implemented authoritative co-op multiplayer (backend + frontend). Backend
+      is fully tested (backend/tests/test_realtime.py: 18 passing). Frontend
+      co-op screen compiles/lints cleanly but needs a real device/browser run to
+      confirm rendering and input feel. Note: 4 pre-existing failures in
+      test_dharma_battle.py (TestShop) are unrelated to this change — they expect
+      an item_type="coins" /shop/purchase path the server intentionally routes
+      through Stripe now.
