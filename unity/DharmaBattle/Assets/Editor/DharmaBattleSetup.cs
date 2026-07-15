@@ -32,6 +32,8 @@ namespace DharmaBattle.Editor
                 var enemyPrefab = CreateEnemyPrefab(circle);
                 CreateBootstrapScene();
                 CreateBattleScene(bulletPrefab, enemyPrefab);
+                if (!File.Exists(SceneDir + "/Battle.unity"))
+                    throw new System.IO.FileNotFoundException("Battle.unity was not created — setup failed.");
                 SetBuildScenes();
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
@@ -60,16 +62,24 @@ namespace DharmaBattle.Editor
         }
 
         [MenuItem("Dharma Battle/2. Open Bootstrap Scene", false, 1)]
-        public static void OpenBootstrap()
+        public static void OpenBootstrap() => OpenScene(SceneDir + "/Bootstrap.unity");
+
+        [MenuItem("Dharma Battle/4. Open Battle Scene (Play Here)", false, 3)]
+        public static void OpenBattle() => OpenScene(SceneDir + "/Battle.unity");
+
+        static void OpenScene(string assetsPath)
         {
-            var path = SceneDir + "/Bootstrap.unity";
-            if (!File.Exists(path))
+            if (!SceneFileExists(assetsPath))
             {
-                EditorUtility.DisplayDialog("Dharma Battle", "Run 'Setup Project' first.", "OK");
+                EditorUtility.DisplayDialog("Dharma Battle",
+                    $"Scene not found:\n{assetsPath}\n\nRun '1. Setup Project' first.", "OK");
                 return;
             }
-            EditorSceneManager.OpenScene(path);
+            EditorSceneManager.OpenScene(assetsPath);
         }
+
+        static bool SceneFileExists(string assetsPath) =>
+            File.Exists(Path.GetFullPath(Path.Combine(Application.dataPath, "..", assetsPath)));
 
         static void EnsureFolders()
         {
@@ -181,6 +191,11 @@ namespace DharmaBattle.Editor
         {
             var path = SceneDir + "/Battle.unity";
             var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+
+            // App services (also in Bootstrap — allows playing Battle scene directly)
+            var app = new GameObject("App");
+            app.AddComponent<ApiClient>();
+            app.AddComponent<GameSession>();
 
             // Camera
             var cam = Camera.main;
