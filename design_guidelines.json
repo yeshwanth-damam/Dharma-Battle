@@ -1,0 +1,234 @@
+{
+  "theme": "Dark Theme (Indian Mythology Inspired)",
+  "color_palette": {
+    "background_primary": "#0A0C16",
+    "background_secondary": "#1A1A2E",
+    "surface": "#231E39",
+    "primary": "#FF8C00",
+    "primary_dark": "#CC7000",
+    "secondary": "#4A0D15",
+    "accent_gold": "#FFD700",
+    "accent_glow": "#FF5722",
+    "text_primary": "#F5F5F5",
+    "text_secondary": "#A0A4B8",
+    "danger": "#DC143C",
+    "success": "#4CAF50",
+    "border": "#3A3B58"
+  },
+  "typography": {
+    "instruction": "Use expo-font to load these Google Fonts.",
+    "fonts": {
+      "display": "Cinzel",
+      "body": "Exo 2"
+    },
+    "scale": {
+      "h1": { "fontSize": 48, "fontFamily": "Cinzel", "letterSpacing": 2, "fontWeight": "bold" },
+      "h2": { "fontSize": 32, "fontFamily": "Cinzel", "letterSpacing": 1.5, "fontWeight": "bold" },
+      "h3": { "fontSize": 24, "fontFamily": "Cinzel", "letterSpacing": 1, "fontWeight": "bold" },
+      "body_large": { "fontSize": 18, "fontFamily": "Exo 2", "fontWeight": "500" },
+      "body": { "fontSize": 16, "fontFamily": "Exo 2", "fontWeight": "400" },
+      "small": { "fontSize": 12, "fontFamily": "Exo 2", "letterSpacing": 1, "textTransform": "uppercase", "fontWeight": "600" }
+    }
+  },
+  "component_styles": {
+    "buttons": {
+      "primary": {
+        "backgroundColor": "#FF8C00",
+        "borderRadius": 8,
+        "paddingVertical": 16,
+        "paddingHorizontal": 32,
+        "borderWidth": 2,
+        "borderColor": "#FFD700",
+        "shadowColor": "#FF8C00",
+        "shadowOffset": { "width": 0, "height": 4 },
+        "shadowOpacity": 0.5,
+        "shadowRadius": 10,
+        "elevation": 8
+      },
+      "secondary": {
+        "backgroundColor": "#4A0D15",
+        "borderRadius": 8,
+        "paddingVertical": 16,
+        "paddingHorizontal": 32,
+        "borderWidth": 1,
+        "borderColor": "#FF8C00"
+      },
+      "action_hud": {
+        "width": 64,
+        "height": 64,
+        "borderRadius": 32,
+        "backgroundColor": "rgba(255, 140, 0, 0.2)",
+        "borderWidth": 2,
+        "borderColor": "#FF8C00",
+        "justifyContent": "center",
+        "alignItems": "center"
+      }
+    },
+    "cards": {
+      "hero_card": {
+        "backgroundColor": "#1A1A2E",
+        "borderRadius": 12,
+        "padding": 16,
+        "borderWidth": 1,
+        "borderColor": "#3A3B58",
+        "overflow": "hidden"
+      },
+      "selected_state": {
+        "borderColor": "#FFD700",
+        "borderWidth": 2,
+        "shadowColor": "#FFD700",
+        "shadowOpacity": 0.6,
+        "shadowRadius": 12,
+        "elevation": 10
+      }
+    },
+    "hud_elements": {
+      "health_bar": {
+        "height": 8,
+        "borderRadius": 4,
+        "backgroundColor": "rgba(255, 255, 255, 0.2)",
+        "fillColor": "#DC143C"
+      },
+      "xp_bar": {
+        "height": 12,
+        "borderRadius": 6,
+        "backgroundColor": "rgba(255, 255, 255, 0.1)",
+        "fillColor": "#FFD700"
+      },
+      "joystick": {
+        "base_radius": 60,
+        "base_color": "rgba(26, 26, 46, 0.6)",
+        "stick_radius": 24,
+        "stick_color": "rgba(255, 140, 0, 0.8)",
+        "borderWidth": 2,
+        "borderColor": "rgba(255, 215, 0, 0.3)"
+      }
+    },
+    "modals": {
+      "container": {
+        "backgroundColor": "rgba(10, 12, 22, 0.95)",
+        "borderRadius": 16,
+        "borderWidth": 2,
+        "borderColor": "#4A0D15",
+        "padding": 24
+      }
+    }
+  },
+  "iconography_and_imagery": {
+    "icons": "Use @expo/vector-icons. Prefer FontAwesome5 and MaterialCommunityIcons. Use mythological equivalents: Shield for defense, Lightning Bolt for power, Star for XP.",
+    "imagery_direction": "Epic, dramatic lighting. Gold and saffron accents on deep dark backgrounds. Use subtle mandala patterns as watermark backgrounds for cards."
+  },
+  "animation_motion": {
+    "principles": [
+      "Use React Native Animated API or react-native-reanimated for smooth transitions.",
+      "Cubic Easing: Animations should accelerate when entering and decelerate when exiting.",
+      "Feedback: Every touch MUST trigger visual feedback (scale down to 0.95 on press).",
+      "Glow pulsing: Selected heroes/weapons should have a breathing opacity animation on their gold border."
+    ]
+  },
+  "image_assets": {
+    "hero_arjuna": "https://images.unsplash.com/photo-1593870892620-76ac2b320f2d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MTJ8MHwxfHNlYXJjaHwyfHxpbmRpYW4lMjB3YXJyaW9yJTIwbXl0aG9sb2dpY2FsJTIwYXJjaGVyJTIwYXJqdW5hfGVufDB8fHx8MTc4NDA5NzM3MXww&ixlib=rb-4.1.0&q=85",
+    "hero_hanuman": "https://images.unsplash.com/photo-1564984069790-2d0767de5856?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHwzfHxtb25rZXklMjBnb2QlMjBoYW51bWFuJTIwaGluZHUlMjBteXRob2xvZ3l8ZW58MHx8fHwxNzg0MDk3MzcxfDA&ixlib=rb-4.1.0&q=85",
+    "map_kurukshetra": "https://images.unsplash.com/photo-1727253112274-ca80addee55c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTF8MHwxfHNlYXJjaHwxfHxhbmNpZW50JTIwaW5kaWFuJTIwYmF0dGxlZmllbGQlMjBrdXJ1a3NoZXRyYSUyMGVwaWN8ZW58MHx8fHwxNzg0MDk3MzcxfDA&ixlib=rb-4.1.0&q=85",
+    "weapon_chakra": "https://images.unsplash.com/photo-1602562620395-9384e40b8e16?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDZ8MHwxfHNlYXJjaHwyfHxkaXZpbmUlMjBnbG93aW5nJTIwYW5jaWVudCUyMHdlYXBvbnMlMjBjaGFrcmElMjBtYWNlfGVufDB8fHx8MTc4NDA5NzM3MXww&ixlib=rb-4.1.0&q=85",
+    "shop_coins": "https://images.unsplash.com/photo-1624365169198-38255ba54160?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzN8MHwxfHNlYXJjaHwyfHxnb2xkJTIwY29pbnMlMjBwaWxlJTIwZ2FtZSUyMGFzc2V0c3xlbnwwfHx8fDE3ODQwOTczNzF8MA&ixlib=rb-4.1.0&q=85",
+    "placeholder_bg": "https://images.unsplash.com/photo-1670336955307-3a59d53ca2b1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MTJ8MHwxfHNlYXJjaHw0fHxpbmRpYW4lMjB3YXJyaW9yJTIwbXl0aG9sb2dpY2FsJTIwYXJjaGVyJTIwYXJqdW5hfGVufDB8fHx8MTc4NDA5NzM3MXww&ixlib=rb-4.1.0&q=85"
+  },
+  "screen_blueprints": {
+    "Splash_Home": {
+      "layout": "Centered content with epic background image.",
+      "elements": [
+        "Massive game logo ('DHARMA BATTLE') in Cinzel font, Gold color with text shadow.",
+        "Pulsing 'TAP TO START' primary button.",
+        "Bottom row icons for Settings, Leaderboard, Profile."
+      ]
+    },
+    "Player_Profile": {
+      "layout": "Top-aligned content, scrollable if necessary.",
+      "elements": [
+        "Avatar circle with golden border.",
+        "Warrior Name (h2) and Level indicator.",
+        "XP Bar (gold fill) indicating progress to next level.",
+        "Stats grid: Total Kills, Matches Won, Favorite Astra.",
+        "Coins balance with gold coin icon."
+      ]
+    },
+    "Hero_Selection": {
+      "layout": "Horizontal ScrollView / Carousel for Hero cards.",
+      "elements": [
+        "Screen Title: 'SELECT WARRIOR'.",
+        "Hero Cards: Portrait image, Name, Stat bars (HP, ATK, SPD), locked overlay (if not owned).",
+        "Bottom sticky area: 'SELECT' or 'UNLOCK (Cost)' button."
+      ]
+    },
+    "Weapon_Selection": {
+      "layout": "Grid layout (2 columns) for Astras.",
+      "elements": [
+        "Screen Title: 'CHOOSE ASTRA'.",
+        "Weapon Cards: Icon, Name, Damage value, Cooldown time.",
+        "Highlight currently equipped weapon."
+      ]
+    },
+    "Map_Selection": {
+      "layout": "Vertical list of large cards.",
+      "elements": [
+        "Map Card: Background thumbnail of map, Title (e.g., Kurukshetra), Difficulty (Skulls/Stars).",
+        "Play button overlay on selected map."
+      ]
+    },
+    "In_Game_Battle_HUD": {
+      "layout": "Absolute positioning over the 2D game canvas.",
+      "elements": [
+        "Top-left: Player Mini Health Bar and Ammo/Mana indicator.",
+        "Top-center: Match Timer and Wave indicator.",
+        "Top-right: Kill Counter and Pause button.",
+        "Bottom-left: Virtual Joystick (transparent dark base, glowing stick).",
+        "Bottom-right: Large Fire button, smaller surrounding buttons for Astra/Special ability."
+      ]
+    },
+    "Battle_Results": {
+      "layout": "Centered modal style overlay with dark maroon background.",
+      "elements": [
+        "Title: 'VICTORY' or 'DEFEAT' (Cinzel).",
+        "Stats breakdown: Kills, Survival Time.",
+        "Rewards section: XP gained, Coins earned (animated counting up).",
+        "Buttons: 'SHARE', 'HOME', 'PLAY AGAIN'."
+      ]
+    },
+    "Shop": {
+      "layout": "Tabbed view (Coins, Heroes, Weapons).",
+      "elements": [
+        "Current Coin Balance sticky at top right.",
+        "Grid of items to buy.",
+        "Coin Packs: 'Handful of Coins', 'Chest of Wealth' (mock IAP buttons)."
+      ]
+    },
+    "Leaderboard": {
+      "layout": "FlatList of players.",
+      "elements": [
+        "Top 3 podium display at the top.",
+        "List items: Rank number, Avatar, Name, Score/Kills.",
+        "Highlight current player's row."
+      ]
+    },
+    "Settings": {
+      "layout": "Vertical list of toggles and sliders.",
+      "elements": [
+        "Music Volume slider.",
+        "SFX Volume slider.",
+        "Controls Sensitivity slider.",
+        "Graphics Quality toggle (Low/High)."
+      ]
+    }
+  },
+  "GENERAL_UI_UX_DESIGN_GUIDELINES": [
+    "No transparent backgrounds on readable text containers. Use 'rgba(26, 26, 46, 0.8)' or similar solid bases.",
+    "Add `data-testid` to all interactive and key informational elements for testing.",
+    "Optical alignment over geometrical alignment. Add extra padding where icons meet text.",
+    "Ensure touch targets are at least 44x44 points (React Native units).",
+    "Maintain contrast ratios. Text on dark backgrounds must be pure white or very light grey.",
+    "Never use generic default fonts for headings. Always enforce the custom display font (Cinzel).",
+    "Avoid standard React Native button components; always build custom TouchableOpacity buttons for stylized look.",
+    "Implement safe area boundaries (`SafeAreaView`) to prevent UI elements from hiding behind device notches."
+  ]
+}
