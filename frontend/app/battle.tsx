@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, PanResponder } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, PanResponder, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
@@ -18,7 +18,6 @@ type Particle = { id: number; pos: V; life: number; color: string };
 type Drop = { id: number; pos: V; kind: "hp" | "coin" };
 type KillFeed = { id: number; text: string; life: number };
 
-const WIN = Dimensions.get("window");
 const HUD_TOP = 90;
 const HUD_BOTTOM = 190;
 
@@ -40,14 +39,15 @@ const ABILITY_COOLDOWN = 12; // seconds
 export default function Battle() {
   const router = useRouter();
   const { player, config, selectedMap } = useStore();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
   const heroObj = useMemo(() => config?.heroes.find((h) => h.id === player?.selected_hero), [config, player]);
   const weaponObj = useMemo(() => config?.weapons.find((w) => w.id === player?.selected_weapon), [config, player]);
   const mapObj = useMemo(() => config?.maps.find((m) => m.id === selectedMap), [config, selectedMap]);
 
   const arenaTop = HUD_TOP;
-  const arenaBottom = WIN.height - HUD_BOTTOM;
-  const arenaW = WIN.width;
+  const arenaBottom = windowHeight - HUD_BOTTOM;
+  const arenaW = windowWidth;
   const arenaH = arenaBottom - arenaTop;
 
   const playerRef = useRef<V>({ x: arenaW / 2, y: arenaH / 2 });
@@ -55,6 +55,7 @@ export default function Battle() {
   const maxHpRef = useRef<number>(heroObj?.hp || 100);
   const invulnRef = useRef<number>(0);
   const joystickRef = useRef<V>({ x: 0, y: 0 });
+  const keyboardRef = useRef<V>({ x: 0, y: 0 });
   const enemiesRef = useRef<Enemy[]>([]);
   const bulletsRef = useRef<Bullet[]>([]);
   const particlesRef = useRef<Particle[]>([]);
@@ -76,6 +77,10 @@ export default function Battle() {
   const [paused, setPaused] = useState(false);
   const pausedRef = useRef(false);
   const [, setStatus] = useState<"playing" | "victory" | "defeat">("playing");
+  const togglePause = useCallback(() => {
+    pausedRef.current = !pausedRef.current;
+    setPaused(pausedRef.current);
+  }, []);
 
   const startWave = useCallback((w: number) => {
     waveRef.current = w;
@@ -95,7 +100,7 @@ export default function Battle() {
 
   // Joystick
   const joyBaseX = 80;
-  const joyBaseY = WIN.height - 110;
+  const joyBaseY = windowHeight - 110;
   const [joyKnob, setJoyKnob] = useState<V>({ x: 0, y: 0 });
   const joyPan = useRef(
     PanResponder.create({
@@ -215,6 +220,50 @@ export default function Battle() {
     }
   }, [heroObj, fireBullet, damageEnemy, arenaW, arenaH]);
 
+  // Desktop controls make the web build playable without emulating touch.
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof window === "undefined") return;
+    const pressed = new Set<string>();
+    const movementKeys = new Set(["w", "a", "s", "d", "arrowup", "arrowleft", "arrowdown", "arrowright"]);
+    const updateMovement = () => {
+      const x = Number(pressed.has("d") || pressed.has("arrowright")) - Number(pressed.has("a") || pressed.has("arrowleft"));
+      const y = Number(pressed.has("s") || pressed.has("arrowdown")) - Number(pressed.has("w") || pressed.has("arrowup"));
+      keyboardRef.current = (x || y) ? norm({ x, y }) : { x: 0, y: 0 };
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.tagName === "INPUT" || target?.tagName === "TEXTAREA") return;
+      const key = event.key.toLowerCase();
+      if (movementKeys.has(key)) {
+        event.preventDefault();
+        pressed.add(key);
+        updateMovement();
+      } else if (event.code === "Space" && !event.repeat) {
+        event.preventDefault();
+        triggerAbility();
+      } else if (key === "escape" && !event.repeat) {
+        event.preventDefault();
+        togglePause();
+      }
+    };
+    const onKeyUp = (event: KeyboardEvent) => {
+      pressed.delete(event.key.toLowerCase());
+      updateMovement();
+    };
+    const clearKeys = () => {
+      pressed.clear();
+      updateMovement();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", clearKeys);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", clearKeys);
+    };
+  }, [triggerAbility, togglePause]);
+
   // Arena tap handler (tap-to-fire)
   const arenaTapPan = useRef(
     PanResponder.create({
@@ -242,8 +291,9 @@ export default function Battle() {
         invulnRef.current = Math.max(0, invulnRef.current - dt);
 
         const heroSpd = (heroObj?.spd || 6) * 26;
-        playerRef.current.x = Math.max(20, Math.min(arenaW - 20, playerRef.current.x + joystickRef.current.x * heroSpd * dt));
-        playerRef.current.y = Math.max(20, Math.min(arenaH - 20, playerRef.current.y + joystickRef.current.y * heroSpd * dt));
+        const movement = len(keyboardRef.current) > 0 ? keyboardRef.current : joystickRef.current;
+        playerRef.current.x = Math.max(20, Math.min(arenaW - 20, playerRef.current.x + movement.x * heroSpd * dt));
+        playerRef.current.y = Math.max(20, Math.min(arenaH - 20, playerRef.current.y + movement.y * heroSpd * dt));
 
         // Tap-to-fire override
         fireCdRef.current -= dt;
@@ -363,8 +413,8 @@ export default function Battle() {
     try {
       const updated = await api.completeMatch(
         player.id, selectedMap,
-        killsRef.current + Math.floor(bonusCoinsRef.current / 10), // small kill bonus already handled server-side
-        Math.floor(elapsedRef.current), victory,
+        killsRef.current,
+        Math.floor(elapsedRef.current), victory, bonusCoinsRef.current,
       );
       router.replace({
         pathname: "/results",
@@ -394,7 +444,6 @@ export default function Battle() {
     }
   };
 
-  const togglePause = () => { pausedRef.current = !pausedRef.current; setPaused(pausedRef.current); };
   const quit = () => { gameOverRef.current = true; router.replace("/lobby"); };
 
   if (!player || !heroObj || !mapObj || !weaponObj) return null;
@@ -490,6 +539,12 @@ export default function Battle() {
         </View>
       </SafeAreaView>
 
+      {Platform.OS === "web" && (
+        <View style={styles.desktopHelp} pointerEvents="none">
+          <Text style={styles.desktopHelpText}>WASD / ARROWS MOVE · CLICK FIRES · SPACE ABILITY · ESC PAUSE</Text>
+        </View>
+      )}
+
       {/* Joystick */}
       <View style={[styles.joyBase, { left: joyBaseX - 60, top: joyBaseY - 60 }]} {...joyPan.panHandlers} testID="battle-joystick">
         <View style={[styles.joyKnob, { transform: [{ translateX: joyKnob.x }, { translateY: joyKnob.y }] }]} />
@@ -551,6 +606,8 @@ const styles = StyleSheet.create({
   killBox: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(0,0,0,0.5)", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: COLORS.border },
   killTxt: { color: COLORS.text, fontFamily: "Exo2-Bold", fontSize: 13 },
   pause: { width: 34, height: 34, borderRadius: 17, backgroundColor: COLORS.secondary, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: COLORS.primary },
+  desktopHelp: { position: "absolute", top: HUD_TOP + 8, left: 0, right: 0, alignItems: "center" },
+  desktopHelpText: { color: "rgba(255,255,255,0.55)", backgroundColor: "rgba(0,0,0,0.45)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, fontFamily: "Exo2-Bold", fontSize: 9, letterSpacing: 0.7 },
   joyBase: { position: "absolute", width: 120, height: 120, borderRadius: 60, backgroundColor: "rgba(26, 26, 46, 0.55)", borderWidth: 2, borderColor: "rgba(255, 215, 0, 0.35)", alignItems: "center", justifyContent: "center" },
   joyKnob: { width: 48, height: 48, borderRadius: 24, backgroundColor: "rgba(255, 140, 0, 0.85)", borderWidth: 2, borderColor: COLORS.gold },
   abilityBtn: { position: "absolute", width: 68, height: 68, borderRadius: 34, borderWidth: 3, backgroundColor: "rgba(255, 87, 34, 0.2)", alignItems: "center", justifyContent: "center" },

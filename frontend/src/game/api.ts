@@ -74,8 +74,8 @@ export const api = {
   getPlayer: (id: string) => req<Player>(`/player/${id}`),
   select: (player_id: string, hero_id?: string, weapon_id?: string) =>
     req<Player>("/player/select", { method: "POST", body: JSON.stringify({ player_id, hero_id, weapon_id }) }),
-  completeMatch: (player_id: string, map_id: string, kills: number, survived_seconds: number, victory: boolean) =>
-    req<Player>("/match/complete", { method: "POST", body: JSON.stringify({ player_id, map_id, kills, survived_seconds, victory }) }),
+  completeMatch: (player_id: string, map_id: string, kills: number, survived_seconds: number, victory: boolean, bonus_coins = 0) =>
+    req<Player>("/match/complete", { method: "POST", body: JSON.stringify({ player_id, map_id, kills, survived_seconds, victory, bonus_coins }) }),
   purchase: (player_id: string, item_type: "hero" | "weapon", item_id: string) =>
     req<Player>("/shop/purchase", { method: "POST", body: JSON.stringify({ player_id, item_type, item_id }) }),
   leaderboard: () => req<LeaderboardEntry[]>("/leaderboard"),

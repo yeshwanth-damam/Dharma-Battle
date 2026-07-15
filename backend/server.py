@@ -92,8 +92,9 @@ class PlayerCreate(BaseModel):
 class MatchResult(BaseModel):
     player_id: str
     map_id: str
-    kills: int
-    survived_seconds: int
+    kills: int = Field(ge=0)
+    survived_seconds: int = Field(ge=0)
+    bonus_coins: int = Field(default=0, ge=0)
     victory: bool
 
 
@@ -174,7 +175,12 @@ async def select_gear(payload: SelectRequest):
 @api_router.post("/match/complete", response_model=Player)
 async def complete_match(res: MatchResult):
     doc = await _fetch(res.player_id)
-    coin_reward = res.kills * 10 + (50 if res.victory else 10)
+    if res.map_id not in {game_map["id"] for game_map in MAPS}:
+        raise HTTPException(400, "Unknown map")
+    # Coin drops are worth five coins each, so an honest client can never
+    # report more bonus coins than five times its kill count.
+    bonus_coins = min(res.bonus_coins, res.kills * 5)
+    coin_reward = res.kills * 10 + (50 if res.victory else 10) + bonus_coins
     xp_reward = res.kills * 15 + (100 if res.victory else 25)
     score = res.kills * 100 + res.survived_seconds * 2 + (500 if res.victory else 0)
 
