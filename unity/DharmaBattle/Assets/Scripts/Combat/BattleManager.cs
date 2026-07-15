@@ -1,4 +1,5 @@
 using System.Collections;
+using DharmaBattle.Core;
 using DharmaBattle.Data;
 using DharmaBattle.Network;
 using UnityEngine;
@@ -36,6 +37,9 @@ namespace DharmaBattle.Combat
             GameDatabase.Load();
             _map = GameDatabase.GetMap(mapId) ?? GameDatabase.Data.maps[0];
             _combat = GameDatabase.Data.combat;
+
+            if (GameSession.Instance != null && !string.IsNullOrEmpty(GameSession.Instance.PlayerId))
+                playerId = GameSession.Instance.PlayerId;
 
             var hero = GameDatabase.GetHero(heroId);
             var weapon = GameDatabase.GetWeapon(weaponId);

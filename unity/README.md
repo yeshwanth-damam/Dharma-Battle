@@ -1,8 +1,47 @@
 # Dharma Battle — Unity Rewrite
 
-Unity is the recommended engine for this project (2D top-down mobile wave shooter). Unreal is viable for a 3D reboot but adds unnecessary complexity for the current design.
+Unity is the recommended engine for this project (2D top-down mobile wave shooter).
 
-**This folder cannot be opened or run inside the Emergent cloud sandbox** — there is no Unity Editor here. Clone the repo on a machine with [Unity Hub](https://unity.com/download) installed.
+## You installed Unity Hub + Unity 6 — do this next
+
+### 1. Open the project
+1. **Unity Hub** → **Add** → **Add project from disk**
+2. Select the folder: `unity/DharmaBattle/` (inside this repo)
+3. Use **Unity 6** (6000.0.x). If Hub asks to upgrade the project, accept.
+
+### 2. One-click setup (first time only)
+After scripts compile:
+1. Menu bar → **Dharma Battle** → **1. Setup Project (Run Once)**
+2. Wait for the dialog: *"Setup complete!"*
+3. **Dharma Battle** → **2. Open Bootstrap Scene**
+4. Press **Play** ▶
+
+You should see: Bootstrap loads → Battle scene → joystick moves player → enemies spawn in waves.
+
+> **Offline mode:** Battle works without the FastAPI backend. Cloud save needs the API (step 3).
+
+### 3. Connect backend (optional, for coins/XP/leaderboard)
+In a terminal from the repo root:
+```bash
+cd backend
+# create .env with MONGO_URL, DB_NAME, STRIPE_API_KEY, EMERGENT_AUTH_URL, DEV_MODE=true
+PYTHONPATH=. uvicorn server:app --host 0.0.0.0 --port 8001
+```
+
+In Unity Editor:
+1. Open **Bootstrap** scene
+2. Select **App** → **Api Client** component
+3. Set **Base Url** to `http://localhost:8001` (Editor) or `http://YOUR_LAN_IP:8001` (phone build)
+
+### 4. Build Android APK
+1. **File → Build Settings → Android → Switch Platform**
+2. **Player Settings → Other Settings → Package Name:** `com.emergent.dharmacombat.xwhm9b`
+3. **Build** (APK for testing, or App Bundle for Play Store)
+
+### 5. iOS (Mac only)
+Switch platform to iOS → Build → open Xcode → Archive.
+
+---
 
 ## Why Unity over Unreal (for Dharma Battle)
 
@@ -23,13 +62,12 @@ Unity is the recommended engine for this project (2D top-down mobile wave shoote
 - Disk: ~10 GB for Editor + platforms
 - Existing **FastAPI backend** (this repo's `backend/`) for player progress, shop, leaderboard
 
-## Quick start
+## Quick start (summary)
 
-1. Open Unity Hub → **Add project from disk** → select `unity/DharmaBattle/`
-2. Let Unity import packages (Input System, Netcode, UGUI).
-3. Create scenes (see Scene setup below).
-4. Start FastAPI: `uvicorn server:app --port 8001`
-5. Set API URL on `ApiClient` component: `http://YOUR_LAN_IP:8001` (not localhost on device builds).
+1. Unity Hub → open `unity/DharmaBattle/`
+2. **Dharma Battle → Setup Project (Run Once)**
+3. Open Bootstrap scene → **Play**
+4. Point ApiClient at FastAPI when ready for cloud save
 
 ## What's ported from Expo
 
@@ -42,10 +80,12 @@ Unity is the recommended engine for this project (2D top-down mobile wave shoote
 | Virtual joystick | `VirtualJoystick.cs` |
 | Hero abilities | `PlayerController.TriggerAbility()` |
 
-## Scene setup (manual in Editor)
+## Scene setup
 
-### 1. Bootstrap (`Scenes/Bootstrap.unity`)
-- Empty GameObject `App` with:
+**Automatic:** Run **Dharma Battle → Setup Project** (creates Bootstrap + Battle scenes, prefabs, UI).
+
+**Manual reference** (if you prefer to wire yourself):
+### Bootstrap (`Assets/DharmaBattle/Scenes/Bootstrap.unity`)
   - `ApiClient`
   - `GameSession`
 

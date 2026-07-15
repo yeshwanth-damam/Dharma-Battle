@@ -29,7 +29,8 @@ namespace DharmaBattle.Core
         {
             if (ApiClient.Instance == null)
             {
-                Debug.LogWarning("Add ApiClient to scene.");
+                Debug.LogWarning("No ApiClient — using offline player.");
+                Player = OfflinePlayer();
                 yield break;
             }
 
@@ -41,15 +42,33 @@ namespace DharmaBattle.Core
 
             if (Player == null)
             {
-                yield return ApiClient.Instance.CreatePlayer(warriorName, p =>
-                {
-                    Player = p;
-                    PlayerPrefs.SetString(PlayerIdKey, p.id);
-                });
+                yield return ApiClient.Instance.CreatePlayer(warriorName,
+                    p =>
+                    {
+                        Player = p;
+                        PlayerPrefs.SetString(PlayerIdKey, p.id);
+                    },
+                    err => Debug.LogWarning($"API create failed: {err}"));
             }
 
-            Debug.Log($"Player ready: {Player?.name} ({Player?.coins} coins)");
+            if (Player == null)
+            {
+                Debug.LogWarning("API unavailable — offline mode (battle works, no cloud save).");
+                Player = OfflinePlayer();
+            }
+
+            Debug.Log($"Player ready: {Player.name} ({Player.coins} coins)");
         }
+
+        static PlayerDto OfflinePlayer() => new()
+        {
+            id = "offline",
+            name = "Warrior",
+            level = 1,
+            coins = 250,
+            selected_hero = "arjuna",
+            selected_weapon = "brahmastra",
+        };
 
         public string SelectedHero => Player?.selected_hero ?? "arjuna";
         public string SelectedWeapon => Player?.selected_weapon ?? "brahmastra";

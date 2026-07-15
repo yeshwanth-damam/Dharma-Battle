@@ -10,6 +10,12 @@ namespace DharmaBattle.UI
         [SerializeField] Camera cam;
         [SerializeField] Combat.PlayerController player;
 
+        void Start()
+        {
+            if (cam == null) cam = Camera.main;
+            if (player == null) player = FindAnyObjectByType<Combat.PlayerController>();
+        }
+
         void Update()
         {
             if (cam == null || player == null) return;
@@ -32,6 +38,7 @@ namespace DharmaBattle.UI
         void Update()
         {
             if (player == null) return;
+            GameDatabase.Load();
             var cd = player.AbilityCooldownRemaining;
             var max = GameDatabase.Data.combat.abilityCooldown;
             if (cooldownFill != null) cooldownFill.fillAmount = cd / max;
