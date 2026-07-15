@@ -1,0 +1,42 @@
+{
+  "summary": "First testing pass on Dharma Battle mobile game. Backend: 18/18 pytest tests PASSED (100%) covering all 7 endpoints (config, player CRUD, select, match/complete rewards + level-up math, shop purchase for coins/heroes/weapons with insufficient-coin + double-purchase + bad-item-type errors, leaderboard sort + no _id leak). Frontend: full end-to-end flow verified on mobile viewport 390x844 — splash → onboarding → lobby (name/coins render) → hero/weapon/map selects open → shop with 3 tabs, coin purchase (250→750), Bhima hero purchase (→250 coins), insufficient-coin toast on Karna (1200>250), leaderboard podium renders, battle screen renders with HUD (hp/wave/kills/joystick/pause), auto-fire kills enemies (kills went 2→7 in 6s), pause overlay + quit returns to lobby, AsyncStorage persistence keeps player on reload (skips onboarding), profile shows correct name. No red-screen errors, no failing APIs. Only minor React Native Web deprecation warnings surfaced (shadow*/textShadow* style props and props.pointerEvents).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {"component": "Global styles (index.tsx, lobby.tsx, battle.tsx, etc.)", "issue": "Console warning: '\"shadow*\" style props are deprecated. Use \"boxShadow\".' React Native 0.76+ uses unified boxShadow. Migrate shadowColor/shadowOffset/shadowOpacity/shadowRadius to boxShadow. Cosmetic on web preview but will produce native warnings."},
+      {"component": "Global text styles (index.tsx titles)", "issue": "Console warning: '\"textShadow*\" style props are deprecated. Use \"textShadow\".' Migrate textShadowColor/textShadowOffset/textShadowRadius to unified textShadow style. Reference: /app/frontend/app/index.tsx:117,121"},
+      {"component": "battle.tsx SafeAreaView & arena View", "issue": "Console warning: 'props.pointerEvents is deprecated. Use style.pointerEvents.' Change pointerEvents=\"box-none\"/'none' JSX prop to style={{pointerEvents:'box-none'}}. Reference: /app/frontend/app/battle.tsx:306,364"},
+      {"component": "Animated (index.tsx pulse/glow)", "issue": "Console warning: 'Animated: `useNativeDriver` is not supported' on web preview. Expected on web; on native it will use native driver. Non-blocking, but if a native build is planned, verify RCTAnimation autolinks."}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_dharma_battle.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Migrate deprecated shadow*/textShadow* style props to boxShadow/textShadow across theme + screens (RN 0.76+).",
+    "Migrate JSX pointerEvents prop to style.pointerEvents in battle.tsx (lines 306 arena view, 364 SafeAreaView).",
+    "IAP is currently MOCKED — /api/shop/purchase credits coins immediately without payment. Wire real Stripe/RevenueCat before launch (already flagged by user)."
+  ],
+  "critical_code_review_comments": [
+    "server.py cleanly excludes _id via projection {\"_id\": 0} — good.",
+    "match/complete level-up loop is correct and handles multi-level jumps.",
+    "shop endpoint atomicity: uses find_one + update_one; safe for single-user usage but race-condition possible if same player buys concurrently. Acceptable for mock IAP MVP.",
+    "Frontend api.ts uses process.env.EXPO_PUBLIC_BACKEND_URL — correct, no hardcoded URL.",
+    "Store persists player id via storage util (AsyncStorage on native, localStorage on web) — verified boot() reloads player from backend on refresh. Works.",
+    "All interactive components have testID coverage — makes automated testing reliable."
+  ],
+  "updated_files": [
+    "/app/backend/tests/__init__.py (created)",
+    "/app/backend/tests/test_dharma_battle.py (created — 18 tests)"
+  ],
+  "success_rate": {"backend": "100% (18/18)", "frontend": "100% (all 19 flow steps passed)"},
+  "seed_data_creation": "Created ~10 TEST_-prefixed players in Mongo (test_database.players) via backend pytest and one TEST_Playwright player via UI test. These populate the leaderboard for verification. No production data touched.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All 7 API endpoints working. Full frontend user journey works end-to-end on mobile viewport including battle simulation (auto-fire kills bots, HUD updates in real-time). Only outstanding items are React Native deprecation warnings (shadow*, textShadow*, pointerEvents JSX prop) — non-blocking. IAP shop is intentionally mocked. Backend pytest file at /app/backend/tests/test_dharma_battle.py is reusable for regression.",
+  "rca_of_issue": "N/A — no bugs found."
+}
