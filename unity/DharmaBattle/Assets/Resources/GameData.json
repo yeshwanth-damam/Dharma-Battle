@@ -1,0 +1,36 @@
+{
+  "heroes": [
+    {"id": "arjuna", "name": "Arjuna", "title": "The Peerless Archer", "hp": 100, "atk": 22, "spd": 6, "skill": "Rapid Fire Astra", "price": 0, "color": "#4FC3F7"},
+    {"id": "bhima", "name": "Bhima", "title": "The Mighty Mace", "hp": 160, "atk": 30, "spd": 4, "skill": "Ground Slam", "price": 500, "color": "#FF7043"},
+    {"id": "hanuman", "name": "Hanuman", "title": "Son of Wind", "hp": 130, "atk": 26, "spd": 8, "skill": "Divine Leap", "price": 800, "color": "#FFD54F"},
+    {"id": "karna", "name": "Karna", "title": "The Radiant", "hp": 120, "atk": 28, "spd": 6, "skill": "Sun Blast", "price": 1200, "color": "#EF5350"}
+  ],
+  "weapons": [
+    {"id": "brahmastra", "name": "Brahmastra", "desc": "Divine cosmic missile", "damage": 20, "cooldown": 0.35, "price": 0, "color": "#FFD700"},
+    {"id": "vajra", "name": "Vajra", "desc": "Thunderbolt of Indra", "damage": 35, "cooldown": 0.6, "price": 400, "color": "#4FC3F7"},
+    {"id": "gada", "name": "Gada", "desc": "Bhima's crushing mace", "damage": 55, "cooldown": 1.1, "price": 700, "color": "#FF7043"},
+    {"id": "sudarshan", "name": "Sudarshan Chakra", "desc": "Krishna's discus, pierces all", "damage": 45, "cooldown": 0.5, "price": 1500, "color": "#FF5722"}
+  ],
+  "maps": [
+    {"id": "kurukshetra", "name": "Kurukshetra", "desc": "The great battlefield of the Mahabharata", "difficulty": 1, "waves": 5, "bg": "#2B1810"},
+    {"id": "lanka", "name": "Lanka", "desc": "The golden fortress of Ravana", "difficulty": 2, "waves": 7, "bg": "#3E1A0C"},
+    {"id": "dwaraka", "name": "Dwaraka", "desc": "Krishna's city on the ocean", "difficulty": 3, "waves": 10, "bg": "#0D2540"}
+  ],
+  "enemyTypes": {
+    "grunt": {"hp": 30, "speed": 55, "damage": 8, "radius": 0.32, "color": "#8E24AA"},
+    "swift": {"hp": 22, "speed": 90, "damage": 6, "radius": 0.26, "color": "#26C6DA"},
+    "brute": {"hp": 80, "speed": 40, "damage": 18, "radius": 0.44, "color": "#D84315"}
+  },
+  "combat": {
+    "bulletSpeed": 10.4,
+    "bulletLife": 1.4,
+    "autoFireRange": 7.6,
+    "abilityCooldown": 12,
+    "heroAtkMultiplier": 0.5,
+    "waveEnemyBase": 4,
+    "waveEnemyPerWave": 2,
+    "maxEnemiesOnScreen": 8,
+    "spawnIntervalBase": 1.4,
+    "waveScaling": 0.15
+  }
+}
