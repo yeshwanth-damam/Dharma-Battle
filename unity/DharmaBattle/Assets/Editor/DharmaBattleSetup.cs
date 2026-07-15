@@ -48,6 +48,17 @@ namespace DharmaBattle.Editor
             }
         }
 
+        [MenuItem("Dharma Battle/3. Fix Build Scenes", false, 2)]
+        public static void FixBuildScenes()
+        {
+            SetBuildScenes();
+            AssetDatabase.SaveAssets();
+            EditorUtility.DisplayDialog(
+                "Dharma Battle",
+                "Bootstrap + Battle scenes added to Build Settings / Build Profile.\n\nPress Play again.",
+                "OK");
+        }
+
         [MenuItem("Dharma Battle/2. Open Bootstrap Scene", false, 1)]
         public static void OpenBootstrap()
         {
@@ -299,11 +310,42 @@ namespace DharmaBattle.Editor
 
         static void SetBuildScenes()
         {
-            EditorBuildSettings.scenes = new[]
+            var bootstrap = SceneDir + "/Bootstrap.unity";
+            var battle = SceneDir + "/Battle.unity";
+            var scenes = new[]
             {
-                new EditorBuildSettingsScene(SceneDir + "/Bootstrap.unity", true),
-                new EditorBuildSettingsScene(SceneDir + "/Battle.unity", true),
+                new EditorBuildSettingsScene(bootstrap, true),
+                new EditorBuildSettingsScene(battle, true),
             };
+            EditorBuildSettings.scenes = scenes;
+            SyncActiveBuildProfile(scenes);
+            Debug.Log("Build scenes registered: Bootstrap, Battle");
+        }
+
+        static void SyncActiveBuildProfile(EditorBuildSettingsScene[] scenes)
+        {
+            try
+            {
+                var profileType = System.Type.GetType("UnityEditor.Build.Profile.BuildProfile, UnityEditor");
+                if (profileType == null) return;
+
+                var getActive = profileType.GetMethod("GetActiveBuildProfile",
+                    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+                var profile = getActive?.Invoke(null, null) as Object;
+                if (profile == null) return;
+
+                var overrideProp = profileType.GetProperty("overrideGlobalScenes");
+                overrideProp?.SetValue(profile, true);
+
+                var scenesProp = profileType.GetProperty("scenes");
+                scenesProp?.SetValue(profile, scenes);
+
+                EditorUtility.SetDirty(profile);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"Build Profile sync skipped: {ex.Message}");
+            }
         }
     }
 }
