@@ -43,6 +43,12 @@ namespace DharmaBattle.Combat
             _bulletDamage = GameDatabase.BulletDamage(hero, weapon);
         }
 
+        public void EnsureBulletPrefab(Bullet prefab)
+        {
+            if (bulletPrefab == null && prefab != null)
+                bulletPrefab = prefab;
+        }
+
         public void SetMoveInput(Vector2 normalized) => _moveInput = Vector2.ClampMagnitude(normalized, 1f);
 
         public void SetAimTarget(Vector2 worldPos)

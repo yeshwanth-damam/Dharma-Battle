@@ -28,9 +28,24 @@ namespace DharmaBattle.Combat
         float _elapsed;
         float _spawnTimer;
         bool _gameOver;
+        bool _missingPrefabLogged;
 
         MapDef _map;
         CombatDef _combat;
+
+        void Awake()
+        {
+            if (player == null)
+                player = FindAnyObjectByType<PlayerController>();
+            if (arenaBounds == null)
+            {
+                var arena = GameObject.Find("Arena");
+                if (arena != null)
+                    arenaBounds = arena.GetComponent<BoxCollider2D>();
+            }
+            if (enemyPrefab == null)
+                enemyPrefab = CombatPrefabs.Enemy;
+        }
 
         void Start()
         {
@@ -38,12 +53,23 @@ namespace DharmaBattle.Combat
             _map = GameDatabase.GetMap(mapId) ?? GameDatabase.Data.maps[0];
             _combat = GameDatabase.Data.combat;
 
+            if (enemyPrefab == null)
+            {
+                Debug.LogError("Enemy prefab is missing. Run Dharma Battle → 1. Setup Project (or 6. Wire Battle Scene).");
+                enabled = false;
+                return;
+            }
+
             if (GameSession.Instance != null && !string.IsNullOrEmpty(GameSession.Instance.PlayerId))
                 playerId = GameSession.Instance.PlayerId;
 
             var hero = GameDatabase.GetHero(heroId);
             var weapon = GameDatabase.GetWeapon(weaponId);
-            player.Init(hero, weapon, this);
+            if (player != null)
+            {
+                player.Init(hero, weapon, this);
+                player.EnsureBulletPrefab(CombatPrefabs.Bullet);
+            }
 
             if (!string.IsNullOrEmpty(_map.bg) && Camera.main != null)
                 Camera.main.backgroundColor = GameDatabase.ParseColor(_map.bg);
@@ -83,6 +109,16 @@ namespace DharmaBattle.Combat
 
         void SpawnEnemy()
         {
+            if (enemyPrefab == null)
+            {
+                if (!_missingPrefabLogged)
+                {
+                    Debug.LogError("Cannot spawn enemies — Enemy prefab is null.");
+                    _missingPrefabLogged = true;
+                }
+                return;
+            }
+
             var roll = Random.value;
             EnemyKind kind = EnemyKind.Grunt;
             if (roll > 0.85f) kind = EnemyKind.Brute;

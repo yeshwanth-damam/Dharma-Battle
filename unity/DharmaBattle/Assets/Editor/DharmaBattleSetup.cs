@@ -19,6 +19,7 @@ namespace DharmaBattle.Editor
         const string PrefabDir = Root + "/Prefabs";
         const string SceneDir = Root + "/Scenes";
         const string SpriteDir = Root + "/Sprites";
+        const string ResourcesCombatDir = "Assets/Resources/Combat";
 
         [MenuItem("Dharma Battle/1. Setup Project (Run Once)", false, 0)]
         public static void SetupProject()
@@ -109,6 +110,10 @@ namespace DharmaBattle.Editor
                 AssetDatabase.CreateFolder("Assets/DharmaBattle", "Scenes");
             if (!AssetDatabase.IsValidFolder(SpriteDir))
                 AssetDatabase.CreateFolder("Assets/DharmaBattle", "Sprites");
+            if (!AssetDatabase.IsValidFolder("Assets/Resources"))
+                AssetDatabase.CreateFolder("Assets", "Resources");
+            if (!AssetDatabase.IsValidFolder(ResourcesCombatDir))
+                AssetDatabase.CreateFolder("Assets/Resources", "Combat");
         }
 
         static void EnsurePlayerTag()
@@ -158,7 +163,11 @@ namespace DharmaBattle.Editor
         {
             var path = PrefabDir + "/Bullet.prefab";
             var existing = AssetDatabase.LoadAssetAtPath<Bullet>(path);
-            if (existing != null) return existing;
+            if (existing != null)
+            {
+                CopyPrefabToResources(path, ResourcesCombatDir + "/Bullet.prefab");
+                return existing;
+            }
 
             var go = new GameObject("Bullet");
             var sr = go.AddComponent<SpriteRenderer>();
@@ -168,7 +177,9 @@ namespace DharmaBattle.Editor
             col.isTrigger = true;
             col.radius = 0.12f;
             go.AddComponent<Bullet>();
-            var prefab = PrefabUtility.SaveAsPrefabAsset(go, path).GetComponent<Bullet>();
+            PrefabUtility.SaveAsPrefabAsset(go, path);
+            PrefabUtility.SaveAsPrefabAsset(go, ResourcesCombatDir + "/Bullet.prefab");
+            var prefab = AssetDatabase.LoadAssetAtPath<Bullet>(path);
             Object.DestroyImmediate(go);
             return prefab;
         }
@@ -177,7 +188,11 @@ namespace DharmaBattle.Editor
         {
             var path = PrefabDir + "/Enemy.prefab";
             var existing = AssetDatabase.LoadAssetAtPath<EnemyController>(path);
-            if (existing != null) return existing;
+            if (existing != null)
+            {
+                CopyPrefabToResources(path, ResourcesCombatDir + "/Enemy.prefab");
+                return existing;
+            }
 
             var go = new GameObject("Enemy");
             var sr = go.AddComponent<SpriteRenderer>();
@@ -189,9 +204,44 @@ namespace DharmaBattle.Editor
             col.isTrigger = true;
             col.radius = 0.32f;
             go.AddComponent<EnemyController>();
-            var prefab = PrefabUtility.SaveAsPrefabAsset(go, path).GetComponent<EnemyController>();
+            PrefabUtility.SaveAsPrefabAsset(go, path);
+            PrefabUtility.SaveAsPrefabAsset(go, ResourcesCombatDir + "/Enemy.prefab");
+            var prefab = AssetDatabase.LoadAssetAtPath<EnemyController>(path);
             Object.DestroyImmediate(go);
             return prefab;
+        }
+
+        static void CopyPrefabToResources(string source, string dest)
+        {
+            if (AssetDatabase.LoadAssetAtPath<Object>(dest) == null)
+                AssetDatabase.CopyAsset(source, dest);
+        }
+
+        [MenuItem("Dharma Battle/6. Wire Battle Scene References", false, 5)]
+        public static void WireBattleScene()
+        {
+            EnsureFolders();
+            var circle = GetOrCreateCircleSprite();
+            var bullet = CreateBulletPrefab(circle);
+            var enemy = CreateEnemyPrefab(circle);
+
+            var mgr = Object.FindAnyObjectByType<BattleManager>();
+            var player = Object.FindAnyObjectByType<PlayerController>();
+            var arena = GameObject.Find("Arena")?.GetComponent<BoxCollider2D>();
+
+            if (mgr != null)
+            {
+                SetSerialized(mgr, "enemyPrefab", enemy);
+                SetSerialized(mgr, "player", player);
+                SetSerialized(mgr, "arenaBounds", arena);
+            }
+            if (player != null)
+                SetSerialized(player, "bulletPrefab", bullet);
+
+            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+            AssetDatabase.SaveAssets();
+            EditorUtility.DisplayDialog("Dharma Battle",
+                "Prefab references wired.\n\nSave scene (Ctrl+S) and press Play.", "OK");
         }
 
         static void CreateBootstrapScene()
