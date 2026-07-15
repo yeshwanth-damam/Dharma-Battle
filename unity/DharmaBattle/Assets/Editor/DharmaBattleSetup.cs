@@ -23,20 +23,29 @@ namespace DharmaBattle.Editor
         [MenuItem("Dharma Battle/1. Setup Project (Run Once)", false, 0)]
         public static void SetupProject()
         {
-            EnsureFolders();
-            EnsurePlayerTag();
-            var circle = GetOrCreateCircleSprite();
-            var bulletPrefab = CreateBulletPrefab(circle);
-            var enemyPrefab = CreateEnemyPrefab(circle);
-            CreateBootstrapScene();
-            CreateBattleScene(bulletPrefab, enemyPrefab);
-            SetBuildScenes();
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-            EditorUtility.DisplayDialog(
-                "Dharma Battle",
-                "Setup complete!\n\n1. Open DharmaBattle/Scenes/Bootstrap.unity\n2. Press Play\n\nSet ApiClient base URL before building to a phone.",
-                "OK");
+            try
+            {
+                EnsureFolders();
+                EnsurePlayerTag();
+                var circle = GetOrCreateCircleSprite();
+                var bulletPrefab = CreateBulletPrefab(circle);
+                var enemyPrefab = CreateEnemyPrefab(circle);
+                CreateBootstrapScene();
+                CreateBattleScene(bulletPrefab, enemyPrefab);
+                SetBuildScenes();
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+                EditorSceneManager.OpenScene(SceneDir + "/Bootstrap.unity");
+                EditorUtility.DisplayDialog(
+                    "Dharma Battle",
+                    "Setup complete!\n\nBootstrap scene is open — press Play.\n\nSet ApiClient base URL before building to a phone.",
+                    "OK");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogException(ex);
+                EditorUtility.DisplayDialog("Dharma Battle Setup Failed", ex.Message, "OK");
+            }
         }
 
         [MenuItem("Dharma Battle/2. Open Bootstrap Scene", false, 1)]
@@ -229,23 +238,39 @@ namespace DharmaBattle.Editor
             SetSerialized(joystick, "handle", joyHandle.GetComponent<RectTransform>());
             SetSerialized(joystick, "player", player);
 
-            // Ability button
+            // Ability button (Image on parent, Text on child — only one Graphic per GameObject)
             var btnGo = CreateUIRect("AbilityButton", canvasGo.transform, new Vector2(100, 100), new Vector2(-140, 160), new Vector2(1, 0), new Vector2(0.92f, 0.12f));
-            var btnImg = btnGo.GetComponent<Image>();
-            btnImg.color = new Color(0.29f, 0.05f, 0.08f);
+            btnGo.GetComponent<Image>().color = new Color(0.29f, 0.05f, 0.08f);
             var btn = btnGo.AddComponent<Button>();
-            var label = CreateUIRect("Text", btnGo.transform, new Vector2(90, 40), Vector2.zero, Vector2.zero, Vector2.one * 0.5f);
-            var txt = label.AddComponent<Text>();
-            txt.text = "SKILL";
-            txt.alignment = TextAnchor.MiddleCenter;
-            txt.color = Color.white;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            CreateUILabel("Label", btnGo.transform, "SKILL", new Vector2(90, 40));
             var ability = btnGo.AddComponent<AbilityButton>();
             SetSerialized(ability, "player", player);
             SetSerialized(ability, "button", btn);
             btn.onClick.AddListener(ability.OnClick);
 
-            canvasGo.AddComponent<TapFireInput>();
+            var tapFire = canvasGo.AddComponent<TapFireInput>();
+            SetSerialized(tapFire, "player", player);
+            if (Camera.main != null)
+                SetSerialized(tapFire, "cam", Camera.main);
+        }
+
+        static void CreateUILabel(string name, Transform parent, string content, Vector2 size)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            var rt = go.GetComponent<RectTransform>();
+            rt.sizeDelta = size;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+            var txt = go.AddComponent<Text>();
+            txt.text = content;
+            txt.alignment = TextAnchor.MiddleCenter;
+            txt.color = Color.white;
+            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf")
+                ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
+            txt.fontSize = 18;
         }
 
         static GameObject CreateUIRect(string name, Transform parent, Vector2 size, Vector2 anchoredPos, Vector2 anchorMin, Vector2 anchorMax)
