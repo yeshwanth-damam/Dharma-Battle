@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, PanResponder, useWindowDimensions } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, PanResponder, Platform, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome5 } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { Platform } from "react-native";
 
 import { COLORS, FONTS } from "@/src/game/theme";
 import { useStore } from "@/src/game/store";
