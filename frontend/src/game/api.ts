@@ -59,6 +59,19 @@ export type LeaderboardEntry = {
   best_score: number;
 };
 
+export type RoomState = "waiting" | "countdown" | "playing" | "finished";
+
+export type RoomPlayerSummary = { id: string; name: string; hero_id: string; connected: boolean };
+
+export type RoomSummary = {
+  code: string;
+  state: RoomState;
+  map_id: string;
+  host_id: string;
+  max_players: number;
+  players: RoomPlayerSummary[];
+};
+
 export type CheckoutResp = { session_id: string; url: string };
 export type CheckoutStatus = {
   session_id: string;
@@ -89,6 +102,24 @@ export const api = {
     }),
   me: () => req<Player>("/auth/me", {}, true),
   logout: () => req<{ ok: boolean }>("/auth/logout", { method: "POST" }, true),
+
+  // ---- Co-op multiplayer ----
+  createRoom: (player_id: string, map_id: string, max_players = 4) =>
+    req<RoomSummary>("/multiplayer/rooms", { method: "POST", body: JSON.stringify({ player_id, map_id, max_players }) }),
+  listRooms: () => req<RoomSummary[]>("/multiplayer/rooms"),
+  getRoom: (code: string) => req<RoomSummary>(`/multiplayer/rooms/${code}`),
+  joinRoom: (code: string, player_id: string) =>
+    req<RoomSummary>(`/multiplayer/rooms/${code}/join`, { method: "POST", body: JSON.stringify({ player_id }) }),
+  leaveRoom: (code: string, player_id: string) =>
+    req<{ ok: boolean }>(`/multiplayer/rooms/${code}/leave`, { method: "POST", body: JSON.stringify({ player_id }) }),
+  startRoom: (code: string, player_id: string) =>
+    req<RoomSummary>(`/multiplayer/rooms/${code}/start`, { method: "POST", body: JSON.stringify({ player_id }) }),
 };
 
 export const TOKEN_STORAGE_KEY = TOKEN_KEY;
+
+export function wsRoomUrl(code: string, playerId: string): string {
+  const httpBase = BASE || (typeof window !== "undefined" ? window.location.origin : "");
+  const wsBase = httpBase.replace(/^http/, "ws");
+  return `${wsBase}/api/ws/room/${code}?player_id=${encodeURIComponent(playerId)}`;
+}
