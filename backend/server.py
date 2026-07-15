@@ -16,6 +16,8 @@ from emergentintegrations.payments.stripe.checkout import (
     CheckoutSessionRequest,
 )
 
+import multiplayer
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
 
@@ -455,6 +457,9 @@ async def auth_logout(authorization: Optional[str] = Header(None)):
 
 
 app.include_router(api_router)
+
+# Real-time squad co-op battle server (WebSocket at /api/ws/battle)
+battle_server = multiplayer.attach(app, db, HEROES, WEAPONS, MAPS, xp_for_next)
 
 app.add_middleware(
     CORSMiddleware,

@@ -112,6 +112,23 @@ export default function Lobby() {
             </LinearGradient>
           </TouchableOpacity>
 
+          {/* Squad co-op (real-time multiplayer) */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.squad}
+            onPress={() => router.push("/squad")}
+            testID="lobby-squad-btn"
+          >
+            <FontAwesome5 name="users" size={18} color={COLORS.gold} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.squadTxt}>SQUAD CO-OP</Text>
+              <Text style={styles.squadSub}>Fight the hordes with up to 4 warriors — live</Text>
+            </View>
+            <View style={styles.liveBadge}>
+              <Text style={styles.liveTxt}>LIVE</Text>
+            </View>
+          </TouchableOpacity>
+
           {/* Quick actions */}
           <View style={styles.quickRow}>
             <QuickBtn icon="store" label="Shop" onPress={() => router.push("/shop")} testID="lobby-shop-btn" />
@@ -194,6 +211,16 @@ const styles = StyleSheet.create({
   },
   playGrad: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 20, gap: 12 },
   playTxt: { color: COLORS.text, fontWeight: "900", fontSize: 20, letterSpacing: 2 },
+
+  squad: {
+    flexDirection: "row", alignItems: "center", gap: 14,
+    marginHorizontal: 20, marginTop: 14, paddingHorizontal: 18, paddingVertical: 16,
+    backgroundColor: COLORS.bg2, borderRadius: 16, borderWidth: 1, borderColor: COLORS.gold,
+  },
+  squadTxt: { color: COLORS.gold, fontWeight: "900", fontSize: 15, letterSpacing: 1.5 },
+  squadSub: { color: COLORS.textDim, fontSize: 11, marginTop: 2 },
+  liveBadge: { backgroundColor: "rgba(220, 20, 60, 0.2)", borderWidth: 1, borderColor: COLORS.danger, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
+  liveTxt: { color: COLORS.danger, fontSize: 9, fontWeight: "900", letterSpacing: 1 },
 
   quickRow: { flexDirection: "row", marginTop: 20, paddingHorizontal: 20, gap: 12 },
   qb: {
