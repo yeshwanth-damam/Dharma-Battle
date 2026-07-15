@@ -5,6 +5,7 @@
 import { AudioPlayer, createAudioPlayer } from "expo-audio";
 import { Platform } from "react-native";
 import { storage } from "@/src/utils/storage";
+import { settingsService } from "./settings";
 
 const SOUNDS = {
   shoot: "https://cdn.pixabay.com/download/audio/2022/03/24/audio_57e28d5c93.mp3?filename=laser-shoot-38126.mp3",
@@ -40,7 +41,8 @@ export const soundService = {
         players[name] = p;
       }
       p.seekTo(0);
-      p.volume = Platform.OS === "web" ? 0.4 : 0.7;
+      const base = Platform.OS === "web" ? 0.4 : 0.7;
+      p.volume = base * settingsService.get().sfxVolume;
       p.play();
     } catch {
       // silent fail — sound is non-critical

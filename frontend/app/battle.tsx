@@ -10,6 +10,7 @@ import { COLORS, FONTS } from "@/src/game/theme";
 import { useStore } from "@/src/game/store";
 import { api } from "@/src/game/api";
 import { soundService } from "@/src/game/sound";
+import { settingsService } from "@/src/game/settings";
 
 type V = { x: number; y: number };
 type Enemy = { id: number; pos: V; hp: number; maxHp: number; radius: number; speed: number; damage: number; color: string; type: "grunt" | "brute" | "swift" };
@@ -137,7 +138,10 @@ export default function Battle() {
 
   const damageEnemy = useCallback((e: Enemy, dmg: number, atPos: V) => {
     e.hp -= dmg;
-    particlesRef.current.push({ id: uniqRef.current++, pos: { x: atPos.x, y: atPos.y }, life: 0.35, color: e.color });
+    if (settingsService.get().graphics === "high") {
+      particlesRef.current.push({ id: uniqRef.current++, pos: { x: atPos.x, y: atPos.y }, life: 0.35, color: e.color });
+      if (particlesRef.current.length > 80) particlesRef.current.splice(0, particlesRef.current.length - 80);
+    }
     if (e.hp <= 0) {
       killsRef.current += 1;
       soundService.play("hit");
@@ -150,16 +154,21 @@ export default function Battle() {
     }
   }, []);
 
+  const bulletDamage = useMemo(
+    () => Math.round((weaponObj?.damage || 20) + (heroObj?.atk || 0) * 0.5),
+    [weaponObj?.damage, heroObj?.atk],
+  );
+
   const fireBullet = useCallback((from: V, target: V) => {
     const dir = norm({ x: target.x - from.x, y: target.y - from.y });
     const speed = 520;
     bulletsRef.current.push({
       id: uniqRef.current++, pos: { x: from.x, y: from.y },
       vel: { x: dir.x * speed, y: dir.y * speed },
-      life: 1.4, damage: weaponObj?.damage || 20, color: weaponObj?.color || COLORS.gold,
+      life: 1.4, damage: bulletDamage, color: weaponObj?.color || COLORS.gold,
     });
     soundService.play("shoot");
-  }, [weaponObj?.damage, weaponObj?.color]);
+  }, [bulletDamage, weaponObj?.color]);
 
   // Hero-specific ability
   const triggerAbility = useCallback(() => {
@@ -241,7 +250,8 @@ export default function Battle() {
         abilityCdRef.current = Math.max(0, abilityCdRef.current - dt);
         invulnRef.current = Math.max(0, invulnRef.current - dt);
 
-        const heroSpd = (heroObj?.spd || 6) * 26;
+        const sens = settingsService.get().sensitivity;
+        const heroSpd = (heroObj?.spd || 6) * 26 * sens;
         playerRef.current.x = Math.max(20, Math.min(arenaW - 20, playerRef.current.x + joystickRef.current.x * heroSpd * dt));
         playerRef.current.y = Math.max(20, Math.min(arenaH - 20, playerRef.current.y + joystickRef.current.y * heroSpd * dt));
 

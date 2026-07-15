@@ -26,6 +26,7 @@ db = client[os.environ["DB_NAME"]]
 STRIPE_API_KEY = os.environ["STRIPE_API_KEY"]
 EMERGENT_AUTH_URL = os.environ["EMERGENT_AUTH_URL"]
 GAME_URL = os.environ.get("GAME_URL", "")
+DEV_MODE = os.environ.get("DEV_MODE", "false").lower() in ("1", "true", "yes")
 
 app = FastAPI(title="Dharma Battle API")
 api_router = APIRouter(prefix="/api")
@@ -228,6 +229,11 @@ async def purchase(req: PurchaseRequest):
             "coins": coins - wpn["price"],
             "owned_weapons": doc.get("owned_weapons", []) + [req.item_id],
         }
+    elif req.item_type == "coins" and DEV_MODE:
+        pack = COIN_PACKS.get(req.item_id)
+        if not pack:
+            raise HTTPException(400, "Unknown coin pack")
+        updates = {"coins": coins + pack["coins"]}
     else:
         raise HTTPException(400, "Bad item_type (use /stripe/checkout for coin packs)")
 

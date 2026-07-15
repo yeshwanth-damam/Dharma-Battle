@@ -116,6 +116,7 @@ export default function Lobby() {
           <View style={styles.quickRow}>
             <QuickBtn icon="store" label="Shop" onPress={() => router.push("/shop")} testID="lobby-shop-btn" />
             <QuickBtn icon="trophy" label="Ranks" onPress={() => router.push("/leaderboard")} testID="lobby-leaderboard-btn" />
+            <QuickBtn icon="cog" label="Settings" onPress={() => router.push("/settings")} testID="lobby-settings-btn" />
             <QuickBtn icon="user-shield" label="Profile" onPress={() => router.push("/profile")} testID="lobby-profile-btn" />
           </View>
         </ScrollView>

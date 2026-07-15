@@ -87,6 +87,10 @@ export default function Index() {
         </View>
 
         <View style={styles.bottom}>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => router.push("/settings")} testID="splash-settings-btn">
+            <FontAwesome5 name="cog" size={20} color={COLORS.gold} />
+            <Text style={styles.iconLbl}>Settings</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.iconBtn} onPress={() => router.push("/leaderboard")} testID="splash-leaderboard-btn">
             <FontAwesome5 name="trophy" size={20} color={COLORS.gold} />
             <Text style={styles.iconLbl}>Ranks</Text>
