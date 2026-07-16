@@ -252,8 +252,6 @@ namespace DharmaBattle.Editor
 
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
             AssetDatabase.SaveAssets();
-            EditorUtility.DisplayDialog("Dharma Battle",
-                "Prefab references wired.\n\nSave scene (Ctrl+S) and press Play.", "OK");
         }
 
         static void CreateBootstrapScene()
@@ -439,7 +437,8 @@ namespace DharmaBattle.Editor
             else if (player != null)
                 CreateBattleUI(player);
 
-            WireBattleScene();
+            WireBattleSceneInternal();
+            EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
             EditorUtility.DisplayDialog("Dharma Battle",
                 "Camera set to 2D, HUD added, prefabs wired.\n\nSave (Ctrl+S) and press Play.\n\n" +
                 "Art is placeholder circles — full UI/characters are in the Expo app (frontend/).",
