@@ -19,13 +19,22 @@ from emergentintegrations.payments.stripe.checkout import (
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
 
-mongo_url = os.environ["MONGO_URL"]
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ["DB_NAME"]]
-
 STRIPE_API_KEY = os.environ["STRIPE_API_KEY"]
 EMERGENT_AUTH_URL = os.environ["EMERGENT_AUTH_URL"]
 GAME_URL = os.environ.get("GAME_URL", "")
+DEV_MODE = os.environ.get("DEV_MODE", "false").lower() in ("1", "true", "yes")
+
+if DEV_MODE:
+    from dev_db import make_dev_db
+
+    db = make_dev_db()
+    client = None
+    logger_boot = logging.getLogger(__name__)
+    logger_boot.warning("DEV_MODE: using in-memory database (no MongoDB required)")
+else:
+    mongo_url = os.environ["MONGO_URL"]
+    client = AsyncIOMotorClient(mongo_url)
+    db = client[os.environ["DB_NAME"]]
 
 app = FastAPI(title="Dharma Battle API")
 api_router = APIRouter(prefix="/api")
@@ -481,4 +490,5 @@ async def _init_indexes():
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    client.close()
+    if client is not None:
+        client.close()

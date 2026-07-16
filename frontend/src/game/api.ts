@@ -3,18 +3,39 @@ import { storage } from "@/src/utils/storage";
 const BASE = process.env.EXPO_PUBLIC_BACKEND_URL || "";
 const TOKEN_KEY = "dharma_session_token";
 
+function apiUrl(path: string) {
+  if (!BASE) {
+    throw new Error(
+      "Backend URL not set. Copy frontend/env.example to frontend/.env and set EXPO_PUBLIC_BACKEND_URL=http://localhost:8001, then restart Expo.",
+    );
+  }
+  return `${BASE.replace(/\/$/, "")}/api${path}`;
+}
+
 async function req<T>(path: string, opts: RequestInit = {}, authenticated = false): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json", ...(opts.headers as any) };
   if (authenticated) {
     const t = await storage.secureGet<string>(TOKEN_KEY, "");
     if (t) headers["Authorization"] = `Bearer ${t}`;
   }
-  const res = await fetch(`${BASE}/api${path}`, { ...opts, headers });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`HTTP ${res.status}: ${body}`);
+  const url = apiUrl(path);
+  let res: Response;
+  try {
+    res = await fetch(url, { ...opts, headers });
+  } catch {
+    throw new Error(`Cannot reach backend at ${BASE}. Start FastAPI: cd backend && python -m uvicorn server:app --port 8001`);
   }
-  return res.json();
+  const body = await res.text().catch(() => "");
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}: ${body.slice(0, 200)}`);
+  }
+  try {
+    return JSON.parse(body) as T;
+  } catch {
+    throw new Error(
+      `Backend returned HTML instead of JSON. Is FastAPI running on ${BASE}? (cd backend, start uvicorn on port 8001)`,
+    );
+  }
 }
 
 export type Hero = { id: string; name: string; title: string; hp: number; atk: number; spd: number; skill: string; price: number; color: string; letter: string };
