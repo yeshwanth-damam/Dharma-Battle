@@ -30,6 +30,7 @@ namespace DharmaBattle.Combat
         public float Hp => _hp;
         public float MaxHp => _maxHp;
         public float AbilityCooldownRemaining => _abilityCd;
+        public string HeroName => _hero?.name ?? "Warrior";
         public bool IsInvulnerable => _invuln > 0f;
 
         public void Init(HeroDef hero, WeaponDef weapon, BattleManager battle)

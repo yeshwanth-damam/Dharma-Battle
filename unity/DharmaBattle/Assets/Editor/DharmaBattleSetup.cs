@@ -225,6 +225,13 @@ namespace DharmaBattle.Editor
         [MenuItem("Dharma Battle/6. Wire Battle Scene References", false, 5)]
         public static void WireBattleScene()
         {
+            WireBattleSceneInternal();
+            EditorUtility.DisplayDialog("Dharma Battle",
+                "Prefab references wired.\n\nSave scene (Ctrl+S) and press Play.", "OK");
+        }
+
+        static void WireBattleSceneInternal()
+        {
             EnsureFolders();
             var circle = GetOrCreateCircleSprite();
             var bullet = CreateBulletPrefab(circle);
@@ -270,28 +277,41 @@ namespace DharmaBattle.Editor
             app.AddComponent<ApiClient>();
             app.AddComponent<GameSession>();
 
-            // Camera
+            // Camera — 2D orthographic (not skybox 3D view)
             var cam = Camera.main;
             if (cam != null)
             {
                 cam.orthographic = true;
-                cam.orthographicSize = 6f;
-                cam.backgroundColor = new Color(0.17f, 0.09f, 0.06f);
+                cam.orthographicSize = 7f;
+                cam.clearFlags = CameraClearFlags.SolidColor;
+                cam.backgroundColor = new Color(0.10f, 0.05f, 0.09f);
                 cam.transform.position = new Vector3(0, 0, -10);
             }
 
-            // Arena bounds
+            var circleSprite = AssetDatabase.LoadAssetAtPath<Sprite>(SpriteDir + "/Circle.png");
+
+            // Arena bounds + visible floor
             var arena = new GameObject("Arena");
             var bounds = arena.AddComponent<BoxCollider2D>();
-            bounds.size = new Vector2(18, 28);
+            bounds.size = new Vector2(16, 24);
             bounds.isTrigger = true;
+            var arenaBg = new GameObject("ArenaFloor");
+            arenaBg.transform.SetParent(arena.transform);
+            arenaBg.transform.localPosition = Vector3.zero;
+            var floorSr = arenaBg.AddComponent<SpriteRenderer>();
+            floorSr.sprite = circleSprite;
+            floorSr.color = new Color(0.17f, 0.09f, 0.06f);
+            floorSr.sortingOrder = -20;
+            arenaBg.transform.localScale = new Vector3(16, 24, 1);
 
-            // Player
+            // Player — blue circle (Arjuna placeholder)
             var playerGo = new GameObject("Player");
             playerGo.tag = "Player";
+            playerGo.transform.localScale = Vector3.one * 1.4f;
             var psr = playerGo.AddComponent<SpriteRenderer>();
-            psr.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(SpriteDir + "/Circle.png");
+            psr.sprite = circleSprite;
             psr.color = new Color(0.31f, 0.76f, 0.97f);
+            psr.sortingOrder = 10;
             var prb = playerGo.AddComponent<Rigidbody2D>();
             prb.bodyType = RigidbodyType2D.Kinematic;
             var pcol = playerGo.AddComponent<CircleCollider2D>();
@@ -307,12 +327,12 @@ namespace DharmaBattle.Editor
             SetSerialized(mgr, "arenaBounds", bounds);
 
             // UI
-            CreateBattleUI(player);
+            CreateBattleUI(player, canvasGo: null);
 
             EditorSceneManager.SaveScene(scene, path);
         }
 
-        static void CreateBattleUI(PlayerController player)
+        static void CreateBattleUI(PlayerController player, GameObject canvasGo = null)
         {
             if (Object.FindAnyObjectByType<EventSystem>() == null)
             {
@@ -321,11 +341,35 @@ namespace DharmaBattle.Editor
                 es.AddComponent<StandaloneInputModule>();
             }
 
-            var canvasGo = new GameObject("Canvas");
-            var canvas = canvasGo.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvasGo.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            canvasGo.AddComponent<GraphicRaycaster>();
+            if (canvasGo == null)
+            {
+                canvasGo = new GameObject("Canvas");
+                var canvas = canvasGo.AddComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                canvasGo.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                canvasGo.AddComponent<GraphicRaycaster>();
+            }
+
+            // HUD labels
+            if (canvasGo.GetComponent<BattleHud>() == null)
+            {
+                var hud = canvasGo.AddComponent<BattleHud>();
+                var title = CreateHudLabel(canvasGo.transform, "Title", "DHARMA BATTLE",
+                    new Vector2(400, 40), new Vector2(0, -20), new Vector2(0.5f, 1f), 22, new Color(1f, 0.84f, 0f));
+                var wave = CreateHudLabel(canvasGo.transform, "Wave", "WAVE 1",
+                    new Vector2(120, 32), new Vector2(16, -70), new Vector2(0, 1f), 16, Color.white);
+                var kills = CreateHudLabel(canvasGo.transform, "Kills", "KILLS 0",
+                    new Vector2(120, 32), new Vector2(150, -70), new Vector2(0, 1f), 16, Color.white);
+                var hp = CreateHudLabel(canvasGo.transform, "HP", "HP 100/100",
+                    new Vector2(160, 32), new Vector2(16, -110), new Vector2(0, 1f), 16, new Color(1f, 0.4f, 0.4f));
+                SetSerialized(hud, "titleText", title);
+                SetSerialized(hud, "waveText", wave);
+                SetSerialized(hud, "killsText", kills);
+                SetSerialized(hud, "hpText", hp);
+            }
+
+            if (canvasGo.transform.Find("JoystickBG") != null)
+                return; // already has controls
 
             // Joystick
             var joyBg = CreateUIRect("JoystickBG", canvasGo.transform, new Vector2(140, 140), new Vector2(160, 160), new Vector2(0, 0), new Vector2(0.08f, 0.12f));
@@ -351,6 +395,55 @@ namespace DharmaBattle.Editor
             SetSerialized(tapFire, "player", player);
             if (Camera.main != null)
                 SetSerialized(tapFire, "cam", Camera.main);
+        }
+
+        static Text CreateHudLabel(Transform parent, string name, string content, Vector2 size,
+            Vector2 pos, Vector2 anchor, int fontSize, Color color)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            var rt = go.GetComponent<RectTransform>();
+            rt.sizeDelta = size;
+            rt.anchorMin = anchor;
+            rt.anchorMax = anchor;
+            rt.pivot = new Vector2(anchor.x, 1f);
+            rt.anchoredPosition = pos;
+            var txt = go.AddComponent<Text>();
+            txt.text = content;
+            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf")
+                ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
+            txt.fontSize = fontSize;
+            txt.fontStyle = FontStyle.Bold;
+            txt.color = color;
+            txt.alignment = TextAnchor.MiddleLeft;
+            return txt;
+        }
+
+        [MenuItem("Dharma Battle/7. Fix Battle Camera + HUD (current scene)", false, 6)]
+        public static void FixBattleCameraAndHud()
+        {
+            var cam = Camera.main;
+            if (cam != null)
+            {
+                cam.orthographic = true;
+                cam.orthographicSize = 7f;
+                cam.clearFlags = CameraClearFlags.SolidColor;
+                cam.backgroundColor = new Color(0.10f, 0.05f, 0.09f);
+                cam.transform.position = new Vector3(0, 0, -10);
+            }
+
+            var player = Object.FindAnyObjectByType<PlayerController>();
+            var canvas = Object.FindAnyObjectByType<Canvas>();
+            if (canvas != null && player != null)
+                CreateBattleUI(player, canvas.gameObject);
+            else if (player != null)
+                CreateBattleUI(player);
+
+            WireBattleScene();
+            EditorUtility.DisplayDialog("Dharma Battle",
+                "Camera set to 2D, HUD added, prefabs wired.\n\nSave (Ctrl+S) and press Play.\n\n" +
+                "Art is placeholder circles — full UI/characters are in the Expo app (frontend/).",
+                "OK");
         }
 
         static void CreateUILabel(string name, Transform parent, string content, Vector2 size)

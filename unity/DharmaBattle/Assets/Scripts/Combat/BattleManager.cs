@@ -156,6 +156,9 @@ namespace DharmaBattle.Combat
             _kills++;
         }
 
+        public int CurrentWave => _wave;
+        public int KillCount => _kills;
+
         public void OnPlayerDefeated()
         {
             if (_gameOver) return;
