@@ -101,6 +101,11 @@ class InMemoryDatabase:
             self._collections[name] = InMemoryCollection()
         return self._collections[name]
 
+    def __getattr__(self, name: str) -> InMemoryCollection:
+        if name.startswith("_"):
+            raise AttributeError(name)
+        return self[name]
+
 
 def make_dev_db() -> InMemoryDatabase:
     return InMemoryDatabase()

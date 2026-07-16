@@ -49,7 +49,7 @@ Open `http://localhost:8081`, enter a warrior name, and click **BEGIN QUEST**.
 |---------|-----|
 | `Unexpected token '<'` / HTML instead of JSON | Backend not running on port 8001, or missing `frontend/.env` |
 | `Backend URL not set` | Only in production builds — set `EXPO_PUBLIC_BACKEND_URL` in `frontend/.env` |
-| `Cannot reach backend` | Start uvicorn in `backend/` (see step 2) |
+| `Cannot reach backend` / CORS + 500 on `/api/player` | Restart backend after `git pull`. Ensure `DEV_MODE=true` in `backend/.env` (default). Check `http://localhost:8001/api/health` returns `{"ok":true}` |
 | npm `preinstall` fails in Git Bash | Use **CMD** or run `npm install` from CMD |
 
 ## Unity prototype

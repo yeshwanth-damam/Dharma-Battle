@@ -1,9 +1,11 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Header
+from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -15,28 +17,78 @@ from emergentintegrations.payments.stripe.checkout import (
     StripeCheckout,
     CheckoutSessionRequest,
 )
+from dev_db import make_dev_db
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
 
-STRIPE_API_KEY = os.environ["STRIPE_API_KEY"]
-EMERGENT_AUTH_URL = os.environ["EMERGENT_AUTH_URL"]
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
+
+STRIPE_API_KEY = os.environ.get("STRIPE_API_KEY", "sk_test_placeholder")
+EMERGENT_AUTH_URL = os.environ.get("EMERGENT_AUTH_URL", "http://localhost:9999")
 GAME_URL = os.environ.get("GAME_URL", "")
-DEV_MODE = os.environ.get("DEV_MODE", "false").lower() in ("1", "true", "yes")
+CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get(
+        "CORS_ORIGINS",
+        "http://localhost:8081,http://127.0.0.1:8081,http://localhost:19006,http://127.0.0.1:19006",
+    ).split(",")
+    if origin.strip()
+]
 
-if DEV_MODE:
-    from dev_db import make_dev_db
+db = None
+client = None
+DEV_MODE = True
 
-    db = make_dev_db()
-    client = None
-    logger_boot = logging.getLogger(__name__)
-    logger_boot.warning("DEV_MODE: using in-memory database (no MongoDB required)")
-else:
-    mongo_url = os.environ["MONGO_URL"]
-    client = AsyncIOMotorClient(mongo_url)
-    db = client[os.environ["DB_NAME"]]
 
-app = FastAPI(title="Dharma Battle API")
+def _env_truthy(name: str, default: str = "true") -> bool:
+    return os.environ.get(name, default).lower() in ("1", "true", "yes")
+
+
+async def _init_database() -> None:
+    global db, client, DEV_MODE
+
+    if _env_truthy("DEV_MODE", "true"):
+        db = make_dev_db()
+        client = None
+        DEV_MODE = True
+        logger.info("Using in-memory database (DEV_MODE=true, no MongoDB required)")
+        return
+
+    mongo_url = os.environ.get("MONGO_URL", "mongodb://127.0.0.1:27017")
+    db_name = os.environ.get("DB_NAME", "dharma_battle")
+    probe = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=3000)
+    try:
+        await probe.admin.command("ping")
+        client = probe
+        db = client[db_name]
+        DEV_MODE = False
+        logger.info("Connected to MongoDB at %s", mongo_url)
+    except Exception as exc:
+        probe.close()
+        db = make_dev_db()
+        client = None
+        DEV_MODE = True
+        logger.warning("MongoDB unavailable (%s); using in-memory database", exc)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await _init_database()
+    try:
+        await db.players.create_index("id", unique=True)
+        await db.players.create_index("email", sparse=True)
+        await db.payments.create_index("session_id", unique=True)
+        await db.user_sessions.create_index("session_token", unique=True)
+    except Exception as exc:
+        logger.warning("index setup: %s", exc)
+    yield
+    if client is not None:
+        client.close()
+
+
+app = FastAPI(title="Dharma Battle API", lifespan=lifespan)
 api_router = APIRouter(prefix="/api")
 
 
@@ -142,6 +194,11 @@ async def _fetch(player_id: str) -> dict:
 
 
 # ---------- Routes ----------
+@api_router.get("/health")
+async def health():
+    return {"ok": True, "dev_mode": DEV_MODE, "storage": "memory" if DEV_MODE else "mongodb"}
+
+
 @api_router.get("/")
 async def root():
     return {"message": "Dharma Battle API is live", "version": "2.0"}
@@ -467,28 +524,16 @@ app.include_router(api_router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=["*"],
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-logger = logging.getLogger(__name__)
 
-
-@app.on_event("startup")
-async def _init_indexes():
-    try:
-        await db.players.create_index("id", unique=True)
-        await db.players.create_index("email", sparse=True)
-        await db.payments.create_index("session_id", unique=True)
-        await db.user_sessions.create_index("session_token", unique=True)
-    except Exception as e:  # noqa
-        logger.warning("index setup: %s", e)
-
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    if client is not None:
-        client.close()
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    if isinstance(exc, HTTPException):
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
