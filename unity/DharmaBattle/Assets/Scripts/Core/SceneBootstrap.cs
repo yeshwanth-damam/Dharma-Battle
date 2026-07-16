@@ -1,21 +1,18 @@
 using System.Collections;
-using System.IO;
 using DharmaBattle.Combat;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace DharmaBattle.Core
 {
-    /// <summary>Loads Battle scene after GameSession finishes booting the API player.</summary>
+    /// <summary>Loads Battle scene after GameSession finishes booting (Bootstrap entry only).</summary>
     public class SceneBootstrap : MonoBehaviour
     {
-        const string BattleSceneAssetPath = "Assets/DharmaBattle/Scenes/Battle.unity";
-
         [SerializeField] string battleSceneName = "Battle";
 
         IEnumerator Start()
         {
-            // Already in battle (e.g. opened Battle scene directly).
+            // Playing Battle directly — skip scene switch.
             if (SceneManager.GetActiveScene().name == battleSceneName
                 || FindAnyObjectByType<BattleManager>() != null)
                 yield break;
@@ -26,41 +23,16 @@ namespace DharmaBattle.Core
             while (GameSession.Instance.Player == null)
                 yield return null;
 
-            if (Application.CanStreamedLevelBeLoaded(battleSceneName))
-            {
-                SceneManager.LoadScene(battleSceneName);
-                yield break;
-            }
-
-#if UNITY_EDITOR
-            if (!BattleSceneExists())
+            if (!Application.CanStreamedLevelBeLoaded(battleSceneName))
             {
                 Debug.LogError(
-                    $"Battle scene not found at {BattleSceneAssetPath}.\n" +
-                    "Fix: Dharma Battle → 1. Setup Project\n" +
-                    "Or: open Battle scene → File → Save → Assets/DharmaBattle/Scenes/Battle.unity\n" +
-                    "Or: Dharma Battle → 4. Open Battle Scene (Play Here) — skip Bootstrap.");
+                    $"Scene '{battleSceneName}' is not in the build.\n" +
+                    "Stop Play → Dharma Battle → 3. Fix Build Scenes → Play again.\n" +
+                    "Or open Battle scene directly: Dharma Battle → 4. Open Battle Scene.");
                 yield break;
             }
 
-            var parameters = new LoadSceneParameters(LoadSceneMode.Single);
-            UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode(
-                ToFullPath(BattleSceneAssetPath), parameters);
-#else
-            Debug.LogError($"Scene '{battleSceneName}' is not in the build. Run Dharma Battle → Fix Build Scenes.");
-#endif
+            SceneManager.LoadScene(battleSceneName);
         }
-
-        static bool BattleSceneExists()
-        {
-#if UNITY_EDITOR
-            return UnityEditor.AssetDatabase.LoadAssetAtPath<Object>(BattleSceneAssetPath) != null;
-#else
-            return File.Exists(ToFullPath(BattleSceneAssetPath));
-#endif
-        }
-
-        static string ToFullPath(string assetsPath) =>
-            Path.GetFullPath(Path.Combine(Application.dataPath, "..", assetsPath));
     }
 }

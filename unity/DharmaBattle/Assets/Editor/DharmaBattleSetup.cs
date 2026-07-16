@@ -54,11 +54,16 @@ namespace DharmaBattle.Editor
         [MenuItem("Dharma Battle/3. Fix Build Scenes", false, 2)]
         public static void FixBuildScenes()
         {
+            EnsureFolders();
+            // Ensure prefabs exist in Resources for runtime fallback
+            var circle = GetOrCreateCircleSprite();
+            CreateBulletPrefab(circle);
+            CreateEnemyPrefab(circle);
             SetBuildScenes();
             AssetDatabase.SaveAssets();
             EditorUtility.DisplayDialog(
                 "Dharma Battle",
-                "Bootstrap + Battle scenes added to Build Settings / Build Profile.\n\nPress Play again.",
+                "Bootstrap + Battle scenes added to Build Settings.\n\nIf Battle scene is open: Wire references (menu 6), Save, then Play.",
                 "OK");
         }
 
@@ -364,7 +369,8 @@ namespace DharmaBattle.Editor
             txt.color = Color.white;
             txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf")
                 ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
-            txt.fontSize = 18;
+            txt.fontSize = 14;
+            txt.horizontalOverflow = HorizontalWrapMode.Overflow;
         }
 
         static GameObject CreateUIRect(string name, Transform parent, Vector2 size, Vector2 anchoredPos, Vector2 anchorMin, Vector2 anchorMax)
