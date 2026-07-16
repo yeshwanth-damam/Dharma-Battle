@@ -1,7 +1,16 @@
-// Loads game fonts (Cinzel + Exo 2) from local assets, alongside icon fonts.
+// Loads game fonts (Cinzel + Exo 2) from @expo-google-fonts, alongside icon fonts.
 // Icon fonts are still loaded from CDN under Expo Go.
 // Usage: const [loaded, error] = useGameFonts();
 
+import {
+  Cinzel_400Regular,
+  Cinzel_700Bold,
+  Cinzel_900Black,
+} from "@expo-google-fonts/cinzel";
+import {
+  Exo2_400Regular,
+  Exo2_700Bold,
+} from "@expo-google-fonts/exo-2";
 import Constants, { ExecutionEnvironment } from "expo-constants";
 import { useFonts } from "expo-font";
 
@@ -38,11 +47,11 @@ const iconFontMap = (): Record<string, string> =>
   );
 
 const gameFontMap = () => ({
-  "Cinzel-Regular": require("../../assets/fonts/Cinzel-Regular.ttf"),
-  "Cinzel-Bold": require("../../assets/fonts/Cinzel-Bold.ttf"),
-  "Cinzel-Black": require("../../assets/fonts/Cinzel-Black.ttf"),
-  "Exo2-Regular": require("../../assets/fonts/Exo2-Regular.ttf"),
-  "Exo2-Bold": require("../../assets/fonts/Exo2-Bold.ttf"),
+  "Cinzel-Regular": Cinzel_400Regular,
+  "Cinzel-Bold": Cinzel_700Bold,
+  "Cinzel-Black": Cinzel_900Black,
+  "Exo2-Regular": Exo2_400Regular,
+  "Exo2-Bold": Exo2_700Bold,
 });
 
 export const useGameFonts = (): readonly [boolean, Error | null] =>
