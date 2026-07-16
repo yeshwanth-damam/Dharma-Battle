@@ -9,6 +9,7 @@ import * as WebBrowser from "expo-web-browser";
 import { COLORS, FONTS } from "@/src/game/theme";
 import { useStore } from "@/src/game/store";
 import { api } from "@/src/game/api";
+import { getBackendUrl } from "@/src/game/backendUrl";
 
 type Tab = "coins" | "heroes" | "astras";
 
@@ -91,7 +92,7 @@ export default function Shop() {
     try {
       const origin = Platform.OS === "web" && typeof window !== "undefined"
         ? window.location.origin
-        : (process.env.EXPO_PUBLIC_BACKEND_URL || "");
+        : getBackendUrl();
       const resp = await api.stripeCheckout(player.id, packId, origin);
       if (Platform.OS === "web") {
         // Same-tab redirect — user returns to /shop?session_id=... after payment

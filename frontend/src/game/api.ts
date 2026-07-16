@@ -1,15 +1,16 @@
 import { storage } from "@/src/utils/storage";
+import { getBackendUrl } from "./backendUrl";
 
-const BASE = process.env.EXPO_PUBLIC_BACKEND_URL || "";
 const TOKEN_KEY = "dharma_session_token";
 
 function apiUrl(path: string) {
-  if (!BASE) {
+  const base = getBackendUrl();
+  if (!base) {
     throw new Error(
       "Backend URL not set. Copy frontend/env.example to frontend/.env and set EXPO_PUBLIC_BACKEND_URL=http://localhost:8001, then restart Expo.",
     );
   }
-  return `${BASE.replace(/\/$/, "")}/api${path}`;
+  return `${base}/api${path}`;
 }
 
 async function req<T>(path: string, opts: RequestInit = {}, authenticated = false): Promise<T> {
@@ -23,7 +24,7 @@ async function req<T>(path: string, opts: RequestInit = {}, authenticated = fals
   try {
     res = await fetch(url, { ...opts, headers });
   } catch {
-    throw new Error(`Cannot reach backend at ${BASE}. Start FastAPI: cd backend && python -m uvicorn server:app --port 8001`);
+    throw new Error(`Cannot reach backend at ${getBackendUrl()}. Start FastAPI: cd backend && python -m uvicorn server:app --port 8001`);
   }
   const body = await res.text().catch(() => "");
   if (!res.ok) {
@@ -33,7 +34,7 @@ async function req<T>(path: string, opts: RequestInit = {}, authenticated = fals
     return JSON.parse(body) as T;
   } catch {
     throw new Error(
-      `Backend returned HTML instead of JSON. Is FastAPI running on ${BASE}? (cd backend, start uvicorn on port 8001)`,
+      `Backend returned HTML instead of JSON. Is FastAPI running on ${getBackendUrl()}? (cd backend, start uvicorn on port 8001)`,
     );
   }
 }

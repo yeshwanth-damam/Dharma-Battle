@@ -11,7 +11,7 @@ cd D:\Dharma-Battle\frontend
 copy env.example .env
 ```
 
-`.env` must contain:
+`.env` is optional in dev — the app defaults to `http://localhost:8001`. Override with:
 
 ```
 EXPO_PUBLIC_BACKEND_URL=http://localhost:8001
@@ -48,7 +48,7 @@ Open `http://localhost:8081`, enter a warrior name, and click **BEGIN QUEST**.
 | Symptom | Fix |
 |---------|-----|
 | `Unexpected token '<'` / HTML instead of JSON | Backend not running on port 8001, or missing `frontend/.env` |
-| `Backend URL not set` | Copy `frontend/env.example` → `frontend/.env`, restart Expo |
+| `Backend URL not set` | Only in production builds — set `EXPO_PUBLIC_BACKEND_URL` in `frontend/.env` |
 | `Cannot reach backend` | Start uvicorn in `backend/` (see step 2) |
 | npm `preinstall` fails in Git Bash | Use **CMD** or run `npm install` from CMD |
 
